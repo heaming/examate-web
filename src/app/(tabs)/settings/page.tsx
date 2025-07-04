@@ -13,6 +13,11 @@ import {
   Shield,
   HelpCircle
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UserProfile {
   name: string;
@@ -95,186 +100,160 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       {/* 헤더 */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">설정</h1>
-        <p className="text-gray-600">앱 설정을 관리하세요</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">설정</h1>
+        <p className="text-muted-foreground">앱 설정을 관리하세요</p>
       </div>
 
       {/* 프로필 섹션 */}
-      <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-4">
-          <User size={20} className="text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">프로필</h2>
-        </div>
-
-        <div className="space-y-4">
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+          <User className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg font-semibold ml-2">프로필</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
-            <input
+            <label className="block text-sm font-medium text-foreground mb-1">이름</label>
+            <Input
               type="text"
               value={profile.name}
               onChange={(e) => handleProfileUpdate('name', e.target.value)}
               disabled={!isEditingProfile}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
-            <input
+            <label className="block text-sm font-medium text-foreground mb-1">이메일</label>
+            <Input
               type="email"
               value={profile.email}
               onChange={(e) => handleProfileUpdate('email', e.target.value)}
               disabled={!isEditingProfile}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">목표 시험</label>
-            <select
+            <label className="block text-sm font-medium text-foreground mb-1">목표 시험</label>
+            <Select
               value={profile.targetExam}
-              onChange={(e) => handleProfileUpdate('targetExam', e.target.value)}
+              onValueChange={(value) => handleProfileUpdate('targetExam', value)}
               disabled={!isEditingProfile}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             >
-              <option value="정보처리기사">정보처리기사</option>
-              <option value="정보처리산업기사">정보처리산업기사</option>
-              <option value="컴퓨터활용능력">컴퓨터활용능력</option>
-              <option value="사무자동화산업기사">사무자동화산업기사</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="정보처리기사">정보처리기사</SelectItem>
+                <SelectItem value="정보처리산업기사">정보처리산업기사</SelectItem>
+                <SelectItem value="컴퓨터활용능력">컴퓨터활용능력</SelectItem>
+                <SelectItem value="사무자동화산업기사">사무자동화산업기사</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">목표 날짜</label>
-            <input
+            <label className="block text-sm font-medium text-foreground mb-1">목표 날짜</label>
+            <Input
               type="date"
               value={profile.targetDate}
               onChange={(e) => handleProfileUpdate('targetDate', e.target.value)}
               disabled={!isEditingProfile}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">일일 목표 (문제 수)</label>
-            <input
+            <label className="block text-sm font-medium text-foreground mb-1">일일 목표 (문제 수)</label>
+            <Input
               type="number"
               value={profile.dailyGoal}
               onChange={(e) => handleProfileUpdate('dailyGoal', parseInt(e.target.value))}
               disabled={!isEditingProfile}
               min="1"
               max="100"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
             />
           </div>
 
           <div className="pt-2">
-            <button
+            <Button
               onClick={() => setIsEditingProfile(!isEditingProfile)}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full"
             >
               {isEditingProfile ? '저장' : '편집'}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* 앱 설정 섹션 */}
-      <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-4">
-          <Target size={20} className="text-green-600" />
-          <h2 className="text-lg font-semibold text-gray-900">앱 설정</h2>
-        </div>
-
-        <div className="space-y-4">
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+          <Target className="h-5 w-5 text-green-600" />
+          <CardTitle className="text-lg font-semibold ml-2">앱 설정</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Bell size={16} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">알림</span>
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">알림</span>
             </div>
-            <button
-              onClick={() => handleSettingToggle('notifications')}
-              className={`w-12 h-6 rounded-full transition-colors ${
-                settings.notifications ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                settings.notifications ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
+            <Switch
+              checked={settings.notifications}
+              onCheckedChange={() => handleSettingToggle('notifications')}
+            />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Moon size={16} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">다크 모드</span>
+              <Moon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">다크 모드</span>
             </div>
-            <button
-              onClick={() => handleSettingToggle('darkMode')}
-              className={`w-12 h-6 rounded-full transition-colors ${
-                settings.darkMode ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                settings.darkMode ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
+            <Switch
+              checked={settings.darkMode}
+              onCheckedChange={() => handleSettingToggle('darkMode')}
+            />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Upload size={16} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">자동 저장</span>
+              <Upload className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">자동 저장</span>
             </div>
-            <button
-              onClick={() => handleSettingToggle('autoSave')}
-              className={`w-12 h-6 rounded-full transition-colors ${
-                settings.autoSave ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                settings.autoSave ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
+            <Switch
+              checked={settings.autoSave}
+              onCheckedChange={() => handleSettingToggle('autoSave')}
+            />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Bell size={16} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">효과음</span>
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">효과음</span>
             </div>
-            <button
-              onClick={() => handleSettingToggle('soundEffects')}
-              className={`w-12 h-6 rounded-full transition-colors ${
-                settings.soundEffects ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                settings.soundEffects ? 'translate-x-6' : 'translate-x-1'
-              }`} />
-            </button>
+            <Switch
+              checked={settings.soundEffects}
+              onCheckedChange={() => handleSettingToggle('soundEffects')}
+            />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* 데이터 관리 섹션 */}
-      <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-4">
-          <Download size={20} className="text-purple-600" />
-          <h2 className="text-lg font-semibold text-gray-900">데이터 관리</h2>
-        </div>
-
-        <div className="space-y-3">
-          <button
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+          <Download className="h-5 w-5 text-purple-600" />
+          <CardTitle className="text-lg font-semibold ml-2">데이터 관리</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button
             onClick={handleDataExport}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="w-full"
+            variant="default"
           >
-            <Download size={16} />
-            <span>데이터 내보내기</span>
-          </button>
+            <Download className="h-4 w-4 mr-2" />
+            데이터 내보내기
+          </Button>
 
           <div className="relative">
             <input
@@ -283,51 +262,51 @@ export default function SettingsPage() {
               onChange={handleDataImport}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
-            <button className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              <Upload size={16} />
-              <span>데이터 가져오기</span>
-            </button>
+            <Button className="w-full" variant="secondary">
+              <Upload className="h-4 w-4 mr-2" />
+              데이터 가져오기
+            </Button>
           </div>
 
-          <button
+          <Button
             onClick={handleDataReset}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="w-full"
+            variant="destructive"
           >
-            <Trash2 size={16} />
-            <span>데이터 초기화</span>
-          </button>
-        </div>
-      </div>
+            <Trash2 className="h-4 w-4 mr-2" />
+            데이터 초기화
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* 기타 섹션 */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-4">
-          <Info size={20} className="text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-900">기타</h2>
-        </div>
-
-        <div className="space-y-3">
-          <button className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 rounded-lg transition-colors">
+      <Card>
+        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+          <Info className="h-5 w-5 text-muted-foreground" />
+          <CardTitle className="text-lg font-semibold ml-2">기타</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button variant="ghost" className="w-full justify-between">
             <div className="flex items-center space-x-3">
-              <HelpCircle size={16} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">도움말</span>
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">도움말</span>
             </div>
-            <span className="text-gray-400">→</span>
-          </button>
+            <span className="text-muted-foreground">→</span>
+          </Button>
 
-          <button className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 rounded-lg transition-colors">
+          <Button variant="ghost" className="w-full justify-between">
             <div className="flex items-center space-x-3">
-              <Shield size={16} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">개인정보처리방침</span>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">개인정보처리방침</span>
             </div>
-            <span className="text-gray-400">→</span>
-          </button>
+            <span className="text-muted-foreground">→</span>
+          </Button>
 
           <div className="pt-2 text-center">
-            <p className="text-xs text-gray-500">ExaMate v1.0.0</p>
+            <p className="text-xs text-muted-foreground">ExaMate v1.0.0</p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 

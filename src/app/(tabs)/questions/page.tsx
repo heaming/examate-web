@@ -7,10 +7,16 @@ import {
   Calendar,
   BookOpen,
   Clock,
-  Target
+  Target,
+  ArrowRight
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
-interface Question {
+export interface Question {
   id: string;
   year: number;
   round: number;
@@ -20,6 +26,19 @@ interface Question {
   difficulty: 'easy' | 'medium' | 'hard';
   isSolved: boolean;
   isCorrect?: boolean;
+}
+
+interface RoundData {
+  round: number;
+  totalQuestions: number;
+  solvedQuestions: number;
+  correctAnswers: number;
+  date: string;
+}
+
+interface YearData {
+  year: number;
+  rounds: RoundData[];
 }
 
 export default function QuestionsPage() {
@@ -80,164 +99,216 @@ export default function QuestionsPage() {
     return yearMatch && categoryMatch && searchMatch;
   });
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-700';
-      case 'medium': return 'bg-yellow-100 text-yellow-700';
-      case 'hard': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
+  // 연도별 회차 데이터
+  const yearsData: YearData[] = [
+    {
+      year: 2024,
+      rounds: [
+        { round: 1, totalQuestions: 80, solvedQuestions: 45, correctAnswers: 38, date: '2024.03.09' },
+        { round: 2, totalQuestions: 80, solvedQuestions: 32, correctAnswers: 28, date: '2024.06.15' },
+        { round: 3, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2024.09.14' },
+        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2024.12.07' },
+      ]
+    },
+    {
+      year: 2023,
+      rounds: [
+        { round: 1, totalQuestions: 80, solvedQuestions: 67, correctAnswers: 58, date: '2023.03.11' },
+        { round: 2, totalQuestions: 80, solvedQuestions: 54, correctAnswers: 47, date: '2023.06.17' },
+        { round: 3, totalQuestions: 80, solvedQuestions: 23, correctAnswers: 19, date: '2023.09.16' },
+        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2023.12.09' },
+      ]
+    },
+    {
+      year: 2022,
+      rounds: [
+        { round: 1, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 72, date: '2022.03.12' },
+        { round: 2, totalQuestions: 80, solvedQuestions: 76, correctAnswers: 68, date: '2022.06.18' },
+        { round: 3, totalQuestions: 80, solvedQuestions: 45, correctAnswers: 39, date: '2022.09.17' },
+        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2022.12.10' },
+      ]
+    },
+    {
+      year: 2021,
+      rounds: [
+        { round: 1, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 75, date: '2021.03.13' },
+        { round: 2, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 71, date: '2021.06.19' },
+        { round: 3, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 73, date: '2021.09.18' },
+        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2021.12.11' },
+      ]
+    },
+    {
+      year: 2020,
+      rounds: [
+        { round: 1, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 76, date: '2020.03.14' },
+        { round: 2, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 74, date: '2020.06.20' },
+        { round: 3, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 72, date: '2020.09.19' },
+        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2020.12.12' },
+      ]
     }
+  ];
+
+  // 선택된 연도의 데이터 가져오기
+  const selectedYearData = yearsData.find(yearData => yearData.year === selectedYear);
+
+  const getProgressColor = (solved: number, total: number) => {
+    const percentage = (solved / total) * 100;
+    if (percentage >= 80) return 'bg-green-500';
+    if (percentage >= 50) return 'bg-orange-500';
+    return 'bg-gray-300';
   };
 
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return '쉬움';
-      case 'medium': return '보통';
-      case 'hard': return '어려움';
-      default: return '보통';
-    }
+  const getProgressText = (solved: number, total: number) => {
+    const percentage = (solved / total) * 100;
+    if (percentage >= 80) return 'text-green-600';
+    if (percentage >= 50) return 'text-yellow-600';
+    return 'text-gray-500';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       {/* 헤더 */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">기출문제</h1>
-        <p className="text-gray-600">년도별 기출문제를 풀어보세요</p>
+      <div className="mb-6 pl-1">
+        <h1 className="text-2xl font-bold text-foreground mb-2">기출문제</h1>
+        <p className="text-muted-foreground">연도별 기출문제를 풀어보세요✒️</p>
       </div>
 
       {/* 필터 섹션 */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-        {/* 년도 필터 */}
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <Calendar size={16} className="text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">년도 선택</span>
-          </div>
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            {years.map((year) => (
-              <button
-                key={year}
-                onClick={() => setSelectedYear(year)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                  selectedYear === year
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {year}년
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 카테고리 필터 */}
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <Filter size={16} className="text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">카테고리</span>
-          </div>
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 검색 */}
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="문제 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      {/* 문제 목록 */}
-      <div className="space-y-3">
-        {filteredQuestions.length === 0 ? (
-          <div className="text-center py-8">
-            <BookOpen size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">해당 조건의 문제가 없습니다.</p>
-          </div>
-        ) : (
-          filteredQuestions.map((question) => (
-            <div
-              key={question.id}
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-blue-600">
-                    {question.year}년 {question.round}회차 {question.number}번
-                  </span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
-                    {getDifficultyText(question.difficulty)}
-                  </span>
-                </div>
-                {question.isSolved && (
-                  <div className={`w-3 h-3 rounded-full ${
-                    question.isCorrect ? 'bg-green-500' : 'bg-red-500'
-                  }`} />
-                )}
-              </div>
-              
-              <p className="text-sm text-gray-900 mb-3 line-clamp-2">
-                {question.title}
-              </p>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {question.category}
-                </span>
-                
-                <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
-                  문제 풀기 →
-                </button>
-              </div>
+      <Card className="mb-6 shadow-lg">
+        <CardContent className="px-4">
+          {/* 연도 필터 */}
+          <div className="">
+            <div className="flex items-center space-x-2 mb-3">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground">연도 선택</span>
             </div>
-          ))
-        )}
-      </div>
+            <div className="flex space-x-2 overflow-x-auto pb-2 pl-1">
+              {years.map((year) => (
+                <Button
+                  key={year}
+                  onClick={() => setSelectedYear(year)}
+                  variant={selectedYear === year ? "default" : "outline"}
+                  size="sm"
+                  className={`transition-none whitespace-nowrap ${selectedYear === year ? 'text-green-500': 'text-green'}`}
+                >
+                  {year}년
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 선택된 연도의 회차별 카드 */}
+      {selectedYearData && (
+        <div className="mb-6">
+          {/* 연도 헤더 */}
+          <div className="flex items-center space-x-2 mb-4">
+            <Calendar className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">{selectedYear}년</h2>
+            <Badge variant="secondary" className="ml-2">
+              총 {selectedYearData.rounds.reduce((sum, round) => sum + round.totalQuestions, 0)}문제
+            </Badge>
+          </div>
+
+          {/* 회차별 카드 그리드 */}
+          <div className="grid grid-cols-2 gap-3">
+            {selectedYearData.rounds.map((round) => (
+              <Link 
+                key={`${selectedYear}-${round.round}`} 
+                href={`/questions/${selectedYear}/${round.round}`}
+              >
+                <Card className="shadow-lg py-2 transition-shadow cursor-pointer border-2 hover:border-primary/20 h-48">
+                  <CardContent className="p-4 h-full flex flex-col">
+                    {/* 시험 일자 */}
+                    <div className="text-xs text-gray-500 mb-1 pl-0.5">
+                      {round.date}
+                    </div>
+                    
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold text-foreground">
+                          {round.round}11회차
+                        </span>
+                        {/* 정답률/미풀이 태그를 회차 옆에 배치 */}
+                        {round.solvedQuestions > 0 ? (
+                          <Badge variant="outline" className="text-gray-400 text-xs">
+                            {Math.round((round.correctAnswers / round.solvedQuestions) * 100)}%
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            미풀이
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 진행률 바 */}
+                    <div className="mb-5">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>진행률</span>
+                        <span>{Math.round((round.solvedQuestions / round.totalQuestions) * 100)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(round.solvedQuestions, round.totalQuestions)}`}
+                          style={{ width: `${(round.solvedQuestions / round.totalQuestions) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* 통계 정보 */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="text-center">
+                        <div className={`font-bold ${getProgressText(round.solvedQuestions, round.totalQuestions)}`}>
+                          {round.solvedQuestions}/{round.totalQuestions}
+                        </div>
+                        <div className="text-muted-foreground">풀이완료</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-bold text-green-600">
+                          {round.correctAnswers}
+                        </div>
+                        <div className="text-muted-foreground">정답</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 통계 정보 */}
-      <div className="bg-white rounded-xl p-4 mt-6 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">현재 상태</h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-lg font-bold text-blue-600">
-              {filteredQuestions.length}
+      <Card className="mt-6 gap-2">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">현재 상태</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-zinc-100 rounded-lg p-3">
+              <div className="text-lg font-bold text-primary">
+                {filteredQuestions.length}
+              </div>
+              <div className="text-xs text-muted-foreground">총 문제</div>
             </div>
-            <div className="text-xs text-gray-500">총 문제</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-green-600">
-              {filteredQuestions.filter(q => q.isSolved && q.isCorrect).length}
+            <div className="bg-green-50 rounded-lg p-3">
+              <div className="text-lg font-bold text-green-600">
+                {filteredQuestions.filter(q => q.isSolved && q.isCorrect).length}
+              </div>
+              <div className="text-xs text-muted-foreground">정답</div>
             </div>
-            <div className="text-xs text-gray-500">정답</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-orange-600">
-              {filteredQuestions.filter(q => q.isSolved).length}
+            <div className="bg-orange-50 rounded-lg p-3">
+              <div className="text-lg font-bold text-orange-600">
+                {filteredQuestions.filter(q => q.isSolved).length}
+              </div>
+              <div className="text-xs text-muted-foreground">틀린 문제</div>
             </div>
-            <div className="text-xs text-gray-500">푼 문제</div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 

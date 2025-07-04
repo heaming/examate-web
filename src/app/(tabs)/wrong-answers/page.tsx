@@ -11,6 +11,10 @@ import {
   BookOpen,
   TrendingDown
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 interface WrongAnswer {
   id: string;
@@ -118,191 +122,192 @@ export default function WrongAnswersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       {/* 헤더 */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">오답노트</h1>
-        <p className="text-gray-600">틀린 문제들을 다시 복습해보세요</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">오답노트</h1>
+        <p className="text-muted-foreground">틀린 문제들을 다시 복습해보세요</p>
       </div>
 
       {/* 필터 섹션 */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-        {/* 카테고리 필터 */}
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <Filter size={16} className="text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">카테고리</span>
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          {/* 카테고리 필터 */}
+          <div className="mb-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">카테고리</span>
+            </div>
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  className="whitespace-nowrap"
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
           </div>
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+
+          {/* 정렬 옵션 */}
+          <div className="mb-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">정렬</span>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => setSortBy('date')}
+                variant={sortBy === 'date' ? "default" : "outline"}
+                size="sm"
               >
-                {category.name}
-              </button>
-            ))}
+                최근 틀린 순
+              </Button>
+              <Button
+                onClick={() => setSortBy('count')}
+                variant={sortBy === 'count' ? "default" : "outline"}
+                size="sm"
+              >
+                틀린 횟수 순
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* 정렬 옵션 */}
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <TrendingDown size={16} className="text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">정렬</span>
+          {/* 검색 */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="오답 문제 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setSortBy('date')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                sortBy === 'date'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              최근 틀린 순
-            </button>
-            <button
-              onClick={() => setSortBy('count')}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                sortBy === 'count'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              틀린 횟수 순
-            </button>
-          </div>
-        </div>
-
-        {/* 검색 */}
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="오답 문제 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* 오답 목록 */}
       <div className="space-y-3">
         {filteredWrongAnswers.length === 0 ? (
-          <div className="text-center py-8">
-            <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">틀린 문제가 없습니다.</p>
-          </div>
+          <Card>
+            <CardContent className="text-center py-8">
+              <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">틀린 문제가 없습니다.</p>
+            </CardContent>
+          </Card>
         ) : (
           filteredWrongAnswers.map((wrong) => (
-            <div
-              key={wrong.id}
-              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-            >
-              {/* 문제 정보 */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-blue-600">
-                    {wrong.year}년 {wrong.round}회차 {wrong.number}번
-                  </span>
-                  <AlertCircle size={16} className="text-red-500" />
+            <Card key={wrong.id}>
+              <CardContent className="p-4">
+                {/* 문제 정보 */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-primary">
+                      {wrong.year}년 {wrong.round}회차 {wrong.number}번
+                    </span>
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                  </div>
+                  <Badge variant="outline" className={getWrongCountColor(wrong.wrongCount)}>
+                    {wrong.wrongCount}회 틀림
+                  </Badge>
                 </div>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${getWrongCountColor(wrong.wrongCount)}`}>
-                  {wrong.wrongCount}회 틀림
-                </span>
-              </div>
-              
-              <p className="text-sm text-gray-900 mb-3">
-                {wrong.title}
-              </p>
-              
-              {/* 답안 정보 */}
-              <div className="bg-red-50 p-3 rounded-lg mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-red-700">내 답안</span>
-                  <span className="text-xs font-medium text-green-700">정답</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-red-600">{wrong.userAnswer}번</span>
-                  <span className="text-sm font-bold text-green-600">{wrong.correctAnswer}번</span>
-                </div>
-              </div>
-              
-              {/* 해설 */}
-              <div className="mb-3">
-                <h4 className="text-xs font-medium text-gray-700 mb-2">해설</h4>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
-                  {wrong.explanation}
+                
+                <p className="text-sm text-foreground mb-3">
+                  {wrong.title}
                 </p>
-              </div>
-              
-              {/* 노트 */}
-              {wrong.note && (
+                
+                {/* 답안 정보 */}
+                <div className="bg-destructive/10 p-3 rounded-lg mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-destructive">내 답안</span>
+                    <span className="text-xs font-medium text-green-700">정답</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-destructive">{wrong.userAnswer}번</span>
+                    <span className="text-sm font-bold text-green-600">{wrong.correctAnswer}번</span>
+                  </div>
+                </div>
+                
+                {/* 해설 */}
                 <div className="mb-3">
-                  <h4 className="text-xs font-medium text-gray-700 mb-2">내 노트</h4>
-                  <p className="text-sm text-gray-600 bg-blue-50 p-2 rounded-lg">
-                    {wrong.note}
+                  <h4 className="text-xs font-medium text-foreground mb-2">해설</h4>
+                  <p className="text-sm text-muted-foreground bg-muted p-2 rounded-lg">
+                    {wrong.explanation}
                   </p>
                 </div>
-              )}
-              
-              {/* 하단 정보 */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {wrong.category}
-                </span>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-1 text-xs text-gray-500">
-                    <Calendar size={12} />
-                    <span>{wrong.lastWrongAt.toLocaleDateString('ko-KR')}</span>
+                {/* 노트 */}
+                {wrong.note && (
+                  <div className="mb-3">
+                    <h4 className="text-xs font-medium text-foreground mb-2">내 노트</h4>
+                    <p className="text-sm text-muted-foreground bg-blue-50 p-2 rounded-lg">
+                      {wrong.note}
+                    </p>
                   </div>
+                )}
+                
+                {/* 하단 정보 */}
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <Badge variant="outline" className="text-xs">
+                    {wrong.category}
+                  </Badge>
                   
-                  <button
-                    onClick={() => handleRetryQuestion(wrong.id)}
-                    className="flex items-center space-x-1 text-blue-600 text-sm font-medium hover:text-blue-700"
-                  >
-                    <RefreshCw size={14} />
-                    <span>다시 풀기</span>
-                  </button>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>{wrong.lastWrongAt.toLocaleDateString('ko-KR')}</span>
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleRetryQuestion(wrong.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary hover:text-primary"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                      다시 풀기
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
 
       {/* 통계 정보 */}
-      <div className="bg-white rounded-xl p-4 mt-6 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">오답 통계</h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-lg font-bold text-red-600">
-              {wrongAnswers.length}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">오답 통계</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-lg font-bold text-destructive">
+                {wrongAnswers.length}
+              </div>
+              <div className="text-xs text-muted-foreground">총 오답</div>
             </div>
-            <div className="text-xs text-gray-500">총 오답</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-orange-600">
-              {wrongAnswers.reduce((sum, w) => sum + w.wrongCount, 0)}
+            <div>
+              <div className="text-lg font-bold text-orange-600">
+                {wrongAnswers.reduce((sum, w) => sum + w.wrongCount, 0)}
+              </div>
+              <div className="text-xs text-muted-foreground">총 틀린 횟수</div>
             </div>
-            <div className="text-xs text-gray-500">총 틀린 횟수</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-blue-600">
-              {Math.round((wrongAnswers.length / (wrongAnswers.length + 50)) * 100)}%
+            <div>
+              <div className="text-lg font-bold text-primary">
+                {Math.round((wrongAnswers.length / (wrongAnswers.length + 50)) * 100)}%
+              </div>
+              <div className="text-xs text-muted-foreground">오답률</div>
             </div>
-            <div className="text-xs text-gray-500">오답률</div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 
