@@ -206,9 +206,9 @@ export default function QuestionsPage() {
           <div className="flex items-center space-x-2 mb-4">
             <Calendar className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-bold text-foreground">{selectedYear}년</h2>
-            <Badge variant="secondary" className="ml-2">
+            <span className="ml-1 text-sm text-zinc-700">
               총 {selectedYearData.rounds.reduce((sum, round) => sum + round.totalQuestions, 0)}문제
-            </Badge>
+            </span>
           </div>
 
           {/* 회차별 카드 그리드 */}
@@ -251,7 +251,7 @@ export default function QuestionsPage() {
                         <span>{Math.round((round.solvedQuestions / round.totalQuestions) * 100)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                           className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(round.solvedQuestions, round.totalQuestions)}`}
                           style={{ width: `${(round.solvedQuestions / round.totalQuestions) * 100}%` }}
                         ></div>

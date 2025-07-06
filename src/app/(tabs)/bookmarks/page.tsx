@@ -8,7 +8,7 @@ import {
   Trash2,
   Edit3,
   Calendar,
-  Tag, BookOpen
+  Tag, BookOpen, XIcon, Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ interface BookmarkedQuestion {
   year: number;
   round: number;
   number: number;
+  answer?: string;
   note?: string;
   tags: string[];
   bookmarkedAt: Date;
@@ -54,6 +55,7 @@ export default function BookmarksPage() {
       year: 2024,
       round: 1,
       number: 1,
+      answer: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
       note: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
       tags: ['객체지향', '설계원칙', '중요'],
       bookmarkedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
@@ -66,6 +68,7 @@ export default function BookmarksPage() {
       year: 2024,
       round: 1,
       number: 2,
+      answer: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
       tags: ['API', 'REST'],
       bookmarkedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
     },
@@ -78,53 +81,11 @@ export default function BookmarksPage() {
       round: 3,
       number: 15,
       note: '분기 커버리지는 모든 분기문의 true/false 경로를 테스트하는 기법이다.',
+      answer: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
       tags: ['테스트', '화이트박스', '커버리지'],
       bookmarkedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     }
   ]);
-
-  const mockQuestions: Question[] = [
-    {
-      id: '1',
-      year: 2024,
-      round: 1,
-      number: 1,
-      category: '소프트웨어 설계',
-      title: '객체지향 설계 원칙 중 단일 책임 원칙(SRP)에 대한 설명으로 옳은 것은?',
-      difficulty: 'medium',
-      isSolved: true,
-      isCorrect: true
-    },
-    {
-      id: '2',
-      year: 2024,
-      round: 1,
-      number: 2,
-      category: '소프트웨어 개발',
-      title: '다음 중 RESTful API 설계 원칙이 아닌 것은?',
-      difficulty: 'easy',
-      isSolved: false
-    },
-    {
-      id: '3',
-      year: 2023,
-      round: 3,
-      number: 15,
-      category: '소프트웨어 테스트',
-      title: '화이트박스 테스트 기법 중 분기 커버리지(Branch Coverage)에 대한 설명으로 옳은 것은?',
-      difficulty: 'hard',
-      isSolved: true,
-      isCorrect: false
-    }
-  ];
-
-  const filteredQuestions = mockQuestions.filter(question => {
-    const yearMatch = question.year === selectedYear;
-    const categoryMatch = selectedCategory === 'all' || question.category === categories.find(c => c.id === selectedCategory)?.name;
-    const searchMatch = question.title.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return yearMatch && categoryMatch && searchMatch;
-  });
 
   const filteredBookmarks = bookmarks.filter(bookmark => {
     const categoryMatch = selectedCategory === 'all' || 
@@ -149,13 +110,13 @@ export default function BookmarksPage() {
   return (
     <div className="min-h-screen bg-background p-4">
       {/* 헤더 */}
-      <div className="mb-6">
+      <div className="mb-6 pl-1">
         <h1 className="text-2xl font-bold text-foreground mb-2">북마크</h1>
-        <p className="text-muted-foreground">저장한 문제들을 관리하세요</p>
+        <p className="text-muted-foreground">저장한 문제를 다시 확인해보세요⭐</p>
       </div>
 
       {/* 필터 섹션 */}
-      <Card className="mb-6 shadow-md">
+      <Card className="mb-6 shadow-lg">
         <CardContent className="px-4">
           {/* 카테고리 필터 */}
           <div className="mb-4">
@@ -195,7 +156,7 @@ export default function BookmarksPage() {
       {/* 북마크 목록 */}
       <div className="space-y-3">
         {filteredBookmarks.length === 0 ? (
-          <Card>
+          <Card className="shadow-lg">
             <CardContent className="text-center py-8">
               <Bookmark className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">북마크한 문제가 없습니다.</p>
@@ -203,104 +164,111 @@ export default function BookmarksPage() {
           </Card>
         ) : (
           filteredBookmarks.map((bookmark) => (
-            <Card key={bookmark.id}>
-              <CardContent className="p-4">
+            <Card className="shadow-lg" key={bookmark.id}>
+              <CardContent className="px-5">
                 {/* 문제 정보 */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-primary">
                       {bookmark.year}년 {bookmark.round}회차 {bookmark.number}번
                     </span>
-                    <Bookmark className="h-4 w-4 text-yellow-500" />
+                    <Bookmark className="h-5 w-4 text-yellow-400 pt-0.5 fill-yellow-400"/>
                   </div>
                   <Button
-                    onClick={() => handleDeleteBookmark(bookmark.id)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive p-1"
+                      onClick={() => handleDeleteBookmark(bookmark.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive items-start mt-1"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <XIcon className="h-4 w-4"/>
                   </Button>
                 </div>
-                
+
                 <p className="text-sm text-foreground mb-3">
-                  {bookmark.title}
+                  Q. {bookmark.title}
                 </p>
-                
-                {/* 태그 */}
-                {bookmark.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {bookmark.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        <Tag className="h-3 w-3 mr-1" />
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                {bookmark.answer && (
+                  <p className="text-sm text-zinc-600 mb-3">
+                  A. {bookmark.answer}
+                  </p>
                 )}
-                
+
+                {/* 태그 */}
+                {/*{bookmark.tags.length > 0 && (*/}
+                {/*  <div className="flex flex-wrap gap-1 mb-3">*/}
+                {/*    {bookmark.tags.map((tag, index) => (*/}
+                {/*      <Badge key={index} variant="secondary" className="text-xs">*/}
+                {/*        <Tag className="h-3 w-3 mr-1" />*/}
+                {/*        {tag}*/}
+                {/*      </Badge>*/}
+                {/*    ))}*/}
+                {/*  </div>*/}
+                {/*)}*/}
+
                 {/* 노트 */}
                 <div className="mb-3">
                   {editingNote === bookmark.id ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={bookmark.note || ''}
-                        onChange={(e) => {
-                          setBookmarks(bookmarks.map(b => 
-                            b.id === bookmark.id ? { ...b, note: e.target.value } : b
-                          ));
-                        }}
-                        placeholder="노트를 입력하세요..."
-                        className="resize-none"
-                        rows={3}
-                      />
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={() => handleUpdateNote(bookmark.id, bookmark.note || '')}
-                          size="sm"
-                        >
-                          저장
-                        </Button>
-                        <Button
-                          onClick={() => setEditingNote(null)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          취소
-                        </Button>
+                      <div className="space-y-2">
+                        <Textarea
+                            value={bookmark.note || ''}
+                            onChange={(e) => {
+                              setBookmarks(bookmarks.map(b =>
+                                  b.id === bookmark.id ? {...b, note: e.target.value} : b
+                              ));
+                            }}
+                            placeholder="노트를 입력하세요"
+                            className="resize-none text-sm"
+                            rows={2}
+                        />
+                        <div className="flex space-x-2 justify-end">
+                          <Button
+                              onClick={() => setEditingNote(null)}
+                              variant="outline"
+                              size="icon"
+                              className="w-8 h-8"
+                          >
+                            <XIcon/>
+                          </Button>
+                          <Button
+                              onClick={() => handleUpdateNote(bookmark.id, bookmark.note || '')}
+                              size="icon"
+                              className="w-8 h-8 text-green-500"
+                          >
+                            <Check/>
+                          </Button>
+                        </div>
                       </div>
-                    </div>
                   ) : (
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        {bookmark.note ? (
-                          <p className="text-sm text-muted-foreground bg-muted p-2 rounded-lg">
-                            {bookmark.note}
-                          </p>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">노트가 없습니다.</p>
-                        )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          {bookmark.note ? (
+                              <p className="text-xs text-muted-foreground bg-muted p-2 rounded-lg">
+                                {bookmark.note}
+                              </p>
+                          ) : (
+                              <p className="text-xs text-muted-foreground italic">노트가 없습니다.</p>
+                          )}
+                        </div>
+                        <Button
+                            onClick={() => setEditingNote(bookmark.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="ml-2 text-zinc-500 hover:text-primary p-1"
+                        >
+                          <Edit3 className="h-4 w-4"/>
+                        </Button>
                       </div>
-                      <Button
-                        onClick={() => setEditingNote(bookmark.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="ml-2 text-primary hover:text-primary p-1"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   )}
                 </div>
-                
+
                 {/* 하단 정보 */}
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <Badge variant="outline" className="text-xs">
                     {bookmark.category}
                   </Badge>
-                  
+
                   <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
+                    <Calendar className="h-3 w-3"/>
                     <span>{bookmark.bookmarkedAt.toLocaleDateString('ko-KR')}</span>
                   </div>
                 </div>
@@ -309,72 +277,6 @@ export default function BookmarksPage() {
           ))
         )}
       </div>
-
-      {/* 문제 목록 */}
-      <div className="space-y-3">
-        {filteredQuestions.length === 0 ? (
-            <Card className="shadow-lg">
-              <CardContent className="text-center py-8">
-                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">해당 조건의 문제가 없습니다.</p>
-              </CardContent>
-            </Card>
-        ) : (
-            filteredQuestions.map((question) => (
-                <Card className="shadow-lg" key={question.id}>
-                  <CardContent className="px-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium text-gray-500">
-                          {question.year}년 {question.round}회차 {question.number}번
-                        </span>
-                        <Badge className={`${question.isCorrect ? "text-green-500" : "text-rose-400"} text-xs`}>
-                          {question.isCorrect ? '정답' : '오답'}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-foreground mb-3 line-clamp-2">
-                      {question.title}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      <Badge className="text-xs bg-zinc-200 text-zinc-800">
-                        {question.category}
-                      </Badge>
-
-                      <Button variant="ghost" size="sm" className="text-primary hover:text-blue-500 hover:bg-white">
-                        문제 풀기 →
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-            ))
-        )}
-      </div>
-
-      {/* 통계 정보 */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">북마크 통계</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-lg font-bold text-primary">
-                {bookmarks.length}
-              </div>
-              <div className="text-xs text-muted-foreground">총 북마크</div>
-            </div>
-            <div>
-              <div className="text-lg font-bold text-green-600">
-                {bookmarks.filter(b => b.note).length}
-              </div>
-              <div className="text-xs text-muted-foreground">노트 작성</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 } 
