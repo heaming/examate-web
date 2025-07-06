@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import FirebaseProvider from "@/components/FirebaseProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ExaMate - 자격증 시험 문제은행",
   description: "자격증 시험 기출문제를 풀고 학습하는 문제은행 앱",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -28,7 +35,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
-        {children}
+        <FirebaseProvider>
+          {children}
+        </FirebaseProvider>
       </body>
     </html>
   );

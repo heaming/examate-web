@@ -16,6 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { useQuestions } from '@/hooks/useQuestions';
+import { Question, ExamStats } from '@/types/question';
 
 // 타입 정의
 interface StudyProgress {
@@ -34,6 +36,31 @@ interface RecentQuestion {
 }
 
 export default function HomePage() {
+  // Firebase Auth에서 사용자 ID 가져오기
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const { getUserId } = require('@/lib/firebase');
+    const currentUserId = getUserId();
+    setUserId(currentUserId);
+    console.log('🔐 현재 사용자 ID:', currentUserId);
+  }, []);
+  
+  // Firebase 훅 사용
+  const { 
+    getRecentQuestions, 
+    getExamStats,
+    loading, 
+    error 
+  } = useQuestions();
+  
+  // 상태 관리
+  const [recentQuestions, setRecentQuestions] = useState<Question[]>([]);
+  const [examStats, setExamStats] = useState<ExamStats | null>(null);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  
+  // 로컬 상태로 기본값 설정
   const [progress, setProgress] = useState<StudyProgress>({
     totalProblems: 1250,
     solvedProblems: 342,
@@ -41,29 +68,52 @@ export default function HomePage() {
     studyStreak: 7
   });
 
-  const [recentQuestions, setRecentQuestions] = useState<RecentQuestion[]>([
-    {
-      id: '1',
-      title: '정보처리기사 2024년 1회차 1번',
-      category: '정보처리기사',
-      isCorrect: true,
-      solvedAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2시간 전
-    },
-    {
-      id: '2',
-      title: '정보처리기사 2024년 1회차 15번',
-      category: '정보처리기사',
-      isCorrect: false,
-      solvedAt: new Date(Date.now() - 4 * 60 * 60 * 1000) // 4시간 전
-    },
-    {
-      id: '3',
-      title: '정보처리기사 2023년 3회차 8번',
-      category: '정보처리기사',
-      isCorrect: true,
-      solvedAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1일 전
+  // 최근 문제들 가져오기
+  useEffect(() => {
+    const fetchRecentQuestions = async () => {
+      setRecentLoading(true);
+      try {
+        // const questions = await getRecentQuestions('korean_history', 5);
+        // setRecentQuestions(questions);
+      } catch (err) {
+        console.error('최근 문제 로드 실패:', err);
+        setRecentQuestions([]);
+      } finally {
+        setRecentLoading(false);
+      }
+    };
+
+    fetchRecentQuestions();
+  }, [getRecentQuestions]);
+
+  // 시험 통계 가져오기 (2025년 74회차 예시)
+  useEffect(() => {
+    const fetchExamStats = async () => {
+      setStatsLoading(true);
+      try {
+        // const stats = await getExamStats(userId, 2025, 74, 'korean_history');
+        // setExamStats(stats);
+      } catch (err) {
+        console.error('시험 통계 로드 실패:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchExamStats();
+  }, [getExamStats, userId]);
+
+  // Firebase 데이터가 로드되면 상태 업데이트
+  useEffect(() => {
+    if (examStats) {
+      setProgress({
+        totalProblems: examStats.totalQuestions,
+        solvedProblems: examStats.solvedQuestions,
+        correctAnswers: examStats.correctAnswers,
+        studyStreak: 7 // 연속 학습일은 별도로 계산 필요
+      });
     }
-  ]);
+  }, [examStats]);
 
   const accuracy = Math.round((progress.correctAnswers / progress.solvedProblems) * 100);
   const progressPercentage = Math.round((progress.solvedProblems / progress.totalProblems) * 100);
@@ -152,26 +202,34 @@ export default function HomePage() {
           </Link>
         </CardHeader>
         <CardContent className="space-y-3">
-          {recentQuestions.map((question) => (
-            <div key={question.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Badge className="text-xs bg-zinc-200 text-zinc-800">
-                    2024년 1회차
-                  </Badge>
-                  <Badge className={`${question.isCorrect ? "text-green-500" : "text-rose-400"} text-xs`}>
-                    {question.isCorrect ? '정답' : '오답'}
-                  </Badge>
+          {recentLoading ? (
+            <div className="text-center py-4 text-muted-foreground">로딩 중...</div>
+          ) : error ? (
+            <div className="text-center py-4 text-red-500">오류: {error}</div>
+          ) : recentQuestions.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">최근 푼 문제가 없습니다.</div>
+          ) : (
+            recentQuestions.map((question) => (
+              <div key={question.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Badge className="text-xs bg-zinc-200 text-zinc-800">
+                      {question.year}년 {question.round}회차
+                    </Badge>
+                    <Badge className="text-xs bg-blue-100 text-blue-800">
+                      {question.subject}
+                    </Badge>
+                  </div>
+                  <p className="text-sm font-medium text-foreground line-clamp-2">
+                    {question.questionNumber}. {question.questionText.substring(0, 50)}...
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {question.createdAt.toLocaleDateString('ko-KR')}
+                  </p>
                 </div>
-                <p className="text-sm font-medium text-foreground line-clamp-1">
-                  {question.title}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {question.solvedAt.toLocaleDateString('ko-KR')}
-                </p>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 

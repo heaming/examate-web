@@ -92,7 +92,24 @@ export default function SettingsPage() {
     notificationDays: ['mon', 'tue', 'wed', 'thu', 'fri']
   });
 
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsOnline(navigator.onLine);
+
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []);
   const [firebaseUid, setFirebaseUid] = useState<string>(''); // Firebase UID 상태
 
   // 알림 시간 상태 분리
