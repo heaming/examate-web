@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
+import { useRoundQuestions, RoundQuestion } from '@/hooks/useRoundQuestions';
+import RoundQuestionsPageSkeleton from '@/components/RoundQuestionsPageSkeleton';
 
 interface Question {
   id: string;
@@ -44,53 +46,54 @@ export default function RoundQuestionsPage() {
   const [isGraded, setIsGraded] = useState(false);
   const [showAnswers, setShowAnswers] = useState<{ [key: number]: boolean }>({});
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [bookmarked, setBookmarked] = useState<{ [key: number]: boolean }>({});
 
-  // 모의 문제 데이터 생성 (10개)
-  const generateMockQuestions = (): Question[] => {
-    const questions: Question[] = [];
-    const categories = [
-      '소프트웨어 설계',
-      '소프트웨어 개발', 
-      '소프트웨어 테스트',
-      '소프트웨어 배포',
-      '소프트웨어 유지보수'
+  // Firebase에서 실제 문제 데이터 가져오기
+  const { 
+    questions: roundQuestions, 
+    loading: isLoading, 
+    error: loadingError,
+    meta 
+  } = useRoundQuestions(year, round, 'korean_history');
+
+  // Firebase 데이터를 UI용 Question 형태로 변환
+  const convertToUIQuestion = (roundQuestion: RoundQuestion): Question => {
+    // options 객체를 동그라미 번호와 함께 배열로 변환
+    const optionsArray = [
+      `① ${roundQuestion.options['1'] || ''}`,
+      `② ${roundQuestion.options['2'] || ''}`,
+      `③ ${roundQuestion.options['3'] || ''}`,
+      `④ ${roundQuestion.options['4'] || ''}`
     ];
-    
-    const difficulties: ('easy' | 'medium' | 'hard')[] = ['easy', 'medium', 'hard'];
-    
-    for (let i = 1; i <= 10; i++) {
-      const isSolved = Math.random() > 0.7; // 30% 확률로 풀이완료
-      const correctAnswer = Math.floor(Math.random() * 4);
-      
-      questions.push({
-        id: `${year}-${round}-${i}`,
-        number: i,
-        category: categories[Math.floor(Math.random() * categories.length)],
-        title: `${year}년 ${round}회차 ${i}번 문제입니다. 이는 ${categories[Math.floor(Math.random() * categories.length)]} 영역의 문제로, 실제 시험에서는 다양한 주제가 출제됩니다.`,
-        difficulty: difficulties[Math.floor(Math.random() * difficulties.length)],
-        options: [
-          `① ${year}년 ${round}회차 ${i}번 문제의 첫 번째 보기입니다.`,
-          `② ${year}년 ${round}회차 ${i}번 문제의 두 번째 보기입니다.`,
-          `③ ${year}년 ${round}회차 ${i}번 문제의 세 번째 보기입니다.`,
-          `④ ${year}년 ${round}회차 ${i}번 문제의 네 번째 보기입니다.`
-        ],
-        correctAnswer,
-        isSolved,
-        isCorrect: isSolved ? Math.random() > 0.2 : undefined, // 80% 확률로 정답
-        userAnswer: isSolved ? Math.floor(Math.random() * 4) : undefined,
-        timeSpent: isSolved ? Math.floor(Math.random() * 5) + 1 : undefined
-      });
-    }
-    
-    return questions;
+
+    // questionNumber에서 숫자 부분 추출 (예: "A-01" -> 1)
+    const numberMatch = roundQuestion.questionNumber.match(/(\d+)$/);
+    const questionNum = numberMatch ? parseInt(numberMatch[1]) : 1;
+
+    return {
+      id: roundQuestion.id,
+      number: questionNum,
+      category: roundQuestion.subject,
+      title: roundQuestion.questionText,
+      difficulty: roundQuestion.difficulty as 'easy' | 'medium' | 'hard',
+      options: optionsArray,
+      correctAnswer: roundQuestion.correctAnswer - 1, // Firebase는 1-4, UI는 0-3
+      isSolved: false, // 초기값
+      isCorrect: undefined,
+      userAnswer: undefined,
+      timeSpent: undefined
+    };
   };
 
   useEffect(() => {
+    if (roundQuestions.length > 0) {
+      const convertedQuestions = roundQuestions.map(convertToUIQuestion);
+      setQuestions(convertedQuestions);
+    }
+  }, [roundQuestions]);
+
+  useEffect(() => {
     if (year && round) {
-      setQuestions(generateMockQuestions());
-      setIsLoading(false);
       // 저장된 답안 불러오기
       const saved = localStorage.getItem(`answers-${year}-${round}`);
       if (saved) {
@@ -105,8 +108,8 @@ export default function RoundQuestionsPage() {
   }, [year, round]);
   
   const solvedQuestions = questions.filter(q => q.isSolved);
-  const correctAnswers = questions.filter(q => q.isSolved && q.isCorrect);
-  const accuracy = solvedQuestions.length > 0 ? (correctAnswers.length / solvedQuestions.length) * 100 : 0;
+  const correctAnswers = questions.filter(q => q.isCorrect);
+  const accuracy = isGraded && questions.length > 0 ? (correctAnswers.length / questions.length) * 100 : 0;
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -127,9 +130,14 @@ export default function RoundQuestionsPage() {
   };
 
   const getStatusIcon = (question: Question) => {
-    if (!question.isSolved) {
-      return <CircleX className="h-4 w-4 text-rose-500" />;
+    if (!isGraded) {
+      return <Circle className="h-4 w-4 text-gray-400" />;
     }
+    
+    if (!question.isSolved) {
+      return <Circle className="h-4 w-4 text-gray-400" />;
+    }
+    
     return question.isCorrect ? 
       <CheckCircle className="h-4 w-4 text-green-500" /> : 
       <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center">
@@ -146,7 +154,13 @@ export default function RoundQuestionsPage() {
 
   const handleGrade = () => {
     setIsGraded(true);
-    // 실제로는 여기서 서버에 답안을 제출하고 결과를 받아옵니다
+    // 채점 결과를 questions 상태에 반영
+    setQuestions(prev => prev.map(question => ({
+      ...question,
+      isSolved: userAnswers[question.number] !== undefined,
+      isCorrect: userAnswers[question.number] !== undefined && userAnswers[question.number] === question.correctAnswer,
+      userAnswer: userAnswers[question.number]
+    })));
   };
 
   const handleRetry = (questionNumber: number) => {
@@ -191,11 +205,45 @@ export default function RoundQuestionsPage() {
   };
 
   if (isLoading) {
+    return <RoundQuestionsPageSkeleton year={year} round={round} />;
+  }
+
+  if (loadingError) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">문제를 불러오는 중...</p>
+          <div className="text-red-500 text-6xl mb-4">❌</div>
+          <h2 className="text-xl font-bold text-foreground mb-2">문제를 불러올 수 없습니다</h2>
+          <p className="text-muted-foreground mb-4">{loadingError}</p>
+          <div className="space-x-2">
+            <Button onClick={() => window.location.reload()} variant="outline">
+              다시 시도
+            </Button>
+            <Link href="/questions">
+              <Button variant="default">
+                문제 목록으로 돌아가기
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0 && !isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-400 text-6xl mb-4">📝</div>
+          <h2 className="text-xl font-bold text-foreground mb-2">문제가 없습니다</h2>
+          <p className="text-muted-foreground mb-4">
+            {year}년 {round}회차 문제를 찾을 수 없습니다.
+          </p>
+          <Link href="/questions">
+            <Button variant="default">
+              문제 목록으로 돌아가기
+            </Button>
+          </Link>
         </div>
       </div>
     );
@@ -263,9 +311,17 @@ export default function RoundQuestionsPage() {
                     <span className="text-md font-medium text-gray-500">
                       {question.number}번
                     </span>
-                    <Badge className={`${question.isCorrect ? "text-green-500" : "text-rose-400"} text-xs`}>
-                      {question.isCorrect ? '정답' : '오답'}
-                    </Badge>
+                    {isGraded && (
+                      <Badge className={`${
+                        !question.isSolved 
+                          ? "bg-black text-white" 
+                          : question.isCorrect 
+                            ? "text-green-500" 
+                            : "text-rose-400"
+                      } text-xs`}>
+                        {!question.isSolved ? '미풀이' : question.isCorrect ? '정답' : '오답'}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 {/* 북마크 버튼 */}
@@ -339,19 +395,15 @@ export default function RoundQuestionsPage() {
                   <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="mb-3">
                       <h4 className="text-sm font-semibold text-blue-800 mb-2">정답</h4>
-                      <div className="text-sm text-blue-900">
-                        {question.options[question.correctAnswer]}
+                      <div className="text-sm text-blue-900 font-semibold">
+                        {['①', '②', '③', '④'][question.correctAnswer]}
                       </div>
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-blue-800 mb-2">해설</h4>
                       <p className="text-sm text-blue-900 leading-relaxed">
-                        {year}년 {round}회차 {question.number}번 문제의 해설입니다.
-                        이 문제는 {question.category} 영역에서 출제되었으며,
-                        {question.difficulty === 'easy' ? '기본적인 개념을 묻는 쉬운 문제' :
-                            question.difficulty === 'medium' ? '적용 능력을 묻는 보통 난이도의 문제' :
-                                '종합적인 이해를 묻는 어려운 문제'}입니다.
-                        정답을 선택한 이유와 각 보기가 틀린 이유에 대해 자세히 설명드립니다.
+                        {roundQuestions.find(rq => rq.id === question.id)?.explanation || 
+                         `${year}년 ${round}회차 ${question.number}번 문제의 해설입니다.`}
                       </p>
                     </div>
                   </div>
@@ -373,6 +425,13 @@ export default function RoundQuestionsPage() {
                     setUserAnswers({});
                     setIsGraded(false);
                     setShowAnswers({});
+                    // questions 상태도 초기화
+                    setQuestions(prev => prev.map(question => ({
+                      ...question,
+                      isSolved: false,
+                      isCorrect: undefined,
+                      userAnswer: undefined
+                    })));
                   }}
                   className="bg-zinc-600 text-sm font-medium text-white hover:bg-primary/90"
               >

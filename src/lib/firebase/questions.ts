@@ -22,6 +22,22 @@ const getFirestore = () => {
   return db;
 };
 
+// examType에 따른 컬렉션 이름 생성 함수
+const getCollectionName = (baseCollection: string, examType: string) => {
+  // Firebase 규칙에서 허용된 컬렉션 이름 형식: questions_korean_history, questionSets_korean_history
+  return `${baseCollection}_${examType}`;
+};
+
+// 허용된 examType 목록
+const ALLOWED_EXAM_TYPES = ['korean_history'];
+
+// examType 유효성 검사
+const validateExamType = (examType: string) => {
+  if (!ALLOWED_EXAM_TYPES.includes(examType)) {
+    throw new Error(`허용되지 않은 examType입니다: ${examType}. 허용된 타입: ${ALLOWED_EXAM_TYPES.join(', ')}`);
+  }
+};
+
 
 import { Question, QuestionSet, UserProgress, ExamStats } from '@/types/question';
 
@@ -37,7 +53,10 @@ export const getQuestionsByYearAndRound = async (
   examType: string = 'korean_history'
 ): Promise<Question[]> => {
   try {
-    const collectionName = `questions_${examType}`;
+    // examType 유효성 검사
+    validateExamType(examType);
+    
+    const collectionName = getCollectionName('questions', examType);
     const q = query(
       collection(getFirestore(), collectionName),
       where('year', '==', year),
@@ -71,7 +90,10 @@ export const getQuestionById = async (
   examType: string = 'korean_history'
 ): Promise<Question | null> => {
   try {
-    const collectionName = `questions_${examType}`;
+    // examType 유효성 검사
+    validateExamType(examType);
+    
+    const collectionName = getCollectionName('questions', examType);
     const docRef = doc(getFirestore(), collectionName, questionId);
     const docSnap = await getDoc(docRef);
     
@@ -99,7 +121,10 @@ export const getQuestionSet = async (
   examType: string = 'korean_history'
 ): Promise<QuestionSet | null> => {
   try {
-    const collectionName = `questionSets_${examType}`;
+    // examType 유효성 검사
+    validateExamType(examType);
+    
+    const collectionName = getCollectionName('questionSets', examType);
     const docId = `${year}-${round}`;
     const docRef = doc(getFirestore(), collectionName, docId);
     const docSnap = await getDoc(docRef);
@@ -128,7 +153,10 @@ export const getQuestionSetsByExamType = async (
   limitCount: number = 10
 ): Promise<QuestionSet[]> => {
   try {
-    const collectionName = `questionSets_${examType}`;
+    // examType 유효성 검사
+    validateExamType(examType);
+    
+    const collectionName = getCollectionName('questionSets', examType);
     const q = query(
       collection(getFirestore(), collectionName),
       orderBy('year', 'desc'),
@@ -319,6 +347,109 @@ export const searchQuestions = async (
     return questions;
   } catch (error) {
     console.error('문제 검색 실패:', error);
+    throw error;
+  }
+};
+
+// 연도별 회차 데이터를 가져오는 함수
+export const getQuestionSetsByYear = async (
+  examType: string = 'korean_history'
+): Promise<{ year: number; rounds: { round: number; totalQuestions: number; date: string; }[] }[]> => {
+  try {
+    // examType 유효성 검사
+    validateExamType(examType);
+    
+    const collectionName = getCollectionName('questionSets', examType);
+    console.log('🔥 Firebase 컬렉션 이름:', collectionName); // 디버깅용
+    
+    const querySnapshot = await getDocs(collection(getFirestore(), collectionName));
+    console.log('🔥 Firebase 데이터 개수:', querySnapshot.size); // 디버깅용
+    
+    // 연도별 회차 데이터를 저장할 Map
+    const yearRoundsMap = new Map<number, { round: number; totalQuestions: number; date: string; }[]>();
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const docId = doc.id; // 예: "2025-74"
+      
+      console.log('🔥 문서 ID:', docId, '데이터:', data); // 디버깅용
+      
+      // docId에서 연도와 회차 추출
+      const [yearStr, roundStr] = docId.split('-');
+      const year = parseInt(yearStr);
+      const round = parseInt(roundStr);
+      
+      console.log('🔥 파싱된 연도:', year, '회차:', round); // 디버깅용
+      
+      if (!isNaN(year) && !isNaN(round)) {
+        const roundData = {
+          round: round,
+          totalQuestions: data.totalQuestions || 80, // 기본값 80
+          date: data.examDate || `${year}.${String(Math.floor(round/4) + 1).padStart(2, '0')}.${String((round % 4) * 3 + 1).padStart(2, '0')}` // 대략적인 날짜 생성
+        };
+        
+        console.log('🔥 생성된 회차 데이터:', roundData); // 디버깅용
+        
+        if (!yearRoundsMap.has(year)) {
+          yearRoundsMap.set(year, []);
+        }
+        
+        yearRoundsMap.get(year)!.push(roundData);
+      }
+    });
+    
+    // Map을 배열로 변환하고 정렬
+    const result = Array.from(yearRoundsMap.entries())
+      .map(([year, rounds]) => ({
+        year,
+        rounds: rounds.sort((a, b) => a.round - b.round) // 회차별 정렬
+      }))
+      .sort((a, b) => b.year - a.year); // 연도 내림차순 정렬
+    
+    console.log('🔥 최종 결과:', result); // 디버깅용
+    
+    return result;
+  } catch (error) {
+    console.error('연도별 회차 데이터 가져오기 실패:', error);
+    throw error;
+  }
+};
+
+// 특정 연도의 회차 목록 가져오기
+export const getRoundsByYear = async (
+  year: number,
+  examType: string = 'korean_history'
+): Promise<{ round: number; totalQuestions: number; date: string; }[]> => {
+  try {
+    // examType 유효성 검사
+    validateExamType(examType);
+    
+    const collectionName = getCollectionName('questionSets', examType);
+    const querySnapshot = await getDocs(collection(getFirestore(), collectionName));
+    
+    const rounds: { round: number; totalQuestions: number; date: string; }[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const docId = doc.id; // 예: "2025-74"
+      
+      // docId에서 연도와 회차 추출
+      const [yearStr, roundStr] = docId.split('-');
+      const docYear = parseInt(yearStr);
+      const round = parseInt(roundStr);
+      
+      if (docYear === year && !isNaN(round)) {
+        rounds.push({
+          round: round,
+          totalQuestions: data.totalQuestions || 80,
+          date: data.examDate || `${year}.${String(Math.floor(round/4) + 1).padStart(2, '0')}.${String((round % 4) * 3 + 1).padStart(2, '0')}`
+        });
+      }
+    });
+    
+    return rounds.sort((a, b) => a.round - b.round);
+  } catch (error) {
+    console.error('특정 연도 회차 데이터 가져오기 실패:', error);
     throw error;
   }
 }; 

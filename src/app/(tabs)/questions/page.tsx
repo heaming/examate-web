@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Filter, 
   Search, 
@@ -8,13 +8,19 @@ import {
   BookOpen,
   Clock,
   Target,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useQuestionYears, YearData, RoundData } from '@/hooks/useQuestionYears';
+import QuestionsPageSkeleton from '@/components/QuestionsPageSkeleton';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
+dayjs.locale('ko');
 
 export interface Question {
   id: string;
@@ -23,130 +29,28 @@ export interface Question {
   number: number;
   category: string;
   title: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty?: 'easy' | 'medium' | 'hard';
   isSolved: boolean;
   isCorrect?: boolean;
 }
 
-interface RoundData {
-  round: number;
-  totalQuestions: number;
-  solvedQuestions: number;
-  correctAnswers: number;
-  date: string;
-}
-
-interface YearData {
-  year: number;
-  rounds: RoundData[];
-}
-
 export default function QuestionsPage() {
-  const [selectedYear, setSelectedYear] = useState<number>(2024);
+  const [selectedYear, setSelectedYear] = useState<number>(dayjs().year());
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Firebase에서 연도별 회차 데이터 가져오기
+  const { yearsData, loading, error } = useQuestionYears('korean_history');
 
-  const years = [2024, 2023, 2022, 2021, 2020];
-  const categories = [
-    { id: 'all', name: '전체' },
-    { id: 'software', name: '소프트웨어 설계' },
-    { id: 'development', name: '소프트웨어 개발' },
-    { id: 'testing', name: '소프트웨어 테스트' },
-    { id: 'deployment', name: '소프트웨어 배포' },
-    { id: 'maintenance', name: '소프트웨어 유지보수' },
-  ];
+  // 연도 목록 추출
+  const years = yearsData.map(yearData => yearData.year).sort((a, b) => b - a);
 
-  const mockQuestions: Question[] = [
-    {
-      id: '1',
-      year: 2024,
-      round: 1,
-      number: 1,
-      category: '소프트웨어 설계',
-      title: '객체지향 설계 원칙 중 단일 책임 원칙(SRP)에 대한 설명으로 옳은 것은?',
-      difficulty: 'medium',
-      isSolved: true,
-      isCorrect: true
-    },
-    {
-      id: '2',
-      year: 2024,
-      round: 1,
-      number: 2,
-      category: '소프트웨어 개발',
-      title: '다음 중 RESTful API 설계 원칙이 아닌 것은?',
-      difficulty: 'easy',
-      isSolved: false
-    },
-    {
-      id: '3',
-      year: 2023,
-      round: 3,
-      number: 15,
-      category: '소프트웨어 테스트',
-      title: '화이트박스 테스트 기법 중 분기 커버리지(Branch Coverage)에 대한 설명으로 옳은 것은?',
-      difficulty: 'hard',
-      isSolved: true,
-      isCorrect: false
+  // 첫 번째 연도를 기본 선택으로 설정
+  useEffect(() => {
+    if (years.length > 0 && !years.includes(selectedYear)) {
+      setSelectedYear(years[0]);
     }
-  ];
-
-  const filteredQuestions = mockQuestions.filter(question => {
-    const yearMatch = question.year === selectedYear;
-    const categoryMatch = selectedCategory === 'all' || question.category === categories.find(c => c.id === selectedCategory)?.name;
-    const searchMatch = question.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return yearMatch && categoryMatch && searchMatch;
-  });
-
-  // 연도별 회차 데이터
-  const yearsData: YearData[] = [
-    {
-      year: 2024,
-      rounds: [
-        { round: 1, totalQuestions: 80, solvedQuestions: 45, correctAnswers: 38, date: '2024.03.09' },
-        { round: 2, totalQuestions: 80, solvedQuestions: 32, correctAnswers: 28, date: '2024.06.15' },
-        { round: 3, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2024.09.14' },
-        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2024.12.07' },
-      ]
-    },
-    {
-      year: 2023,
-      rounds: [
-        { round: 1, totalQuestions: 80, solvedQuestions: 67, correctAnswers: 58, date: '2023.03.11' },
-        { round: 2, totalQuestions: 80, solvedQuestions: 54, correctAnswers: 47, date: '2023.06.17' },
-        { round: 3, totalQuestions: 80, solvedQuestions: 23, correctAnswers: 19, date: '2023.09.16' },
-        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2023.12.09' },
-      ]
-    },
-    {
-      year: 2022,
-      rounds: [
-        { round: 1, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 72, date: '2022.03.12' },
-        { round: 2, totalQuestions: 80, solvedQuestions: 76, correctAnswers: 68, date: '2022.06.18' },
-        { round: 3, totalQuestions: 80, solvedQuestions: 45, correctAnswers: 39, date: '2022.09.17' },
-        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2022.12.10' },
-      ]
-    },
-    {
-      year: 2021,
-      rounds: [
-        { round: 1, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 75, date: '2021.03.13' },
-        { round: 2, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 71, date: '2021.06.19' },
-        { round: 3, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 73, date: '2021.09.18' },
-        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2021.12.11' },
-      ]
-    },
-    {
-      year: 2020,
-      rounds: [
-        { round: 1, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 76, date: '2020.03.14' },
-        { round: 2, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 74, date: '2020.06.20' },
-        { round: 3, totalQuestions: 80, solvedQuestions: 80, correctAnswers: 72, date: '2020.09.19' },
-        { round: 4, totalQuestions: 80, solvedQuestions: 0, correctAnswers: 0, date: '2020.12.12' },
-      ]
-    }
-  ];
+  }, [years, selectedYear]);
 
   // 선택된 연도의 데이터 가져오기
   const selectedYearData = yearsData.find(yearData => yearData.year === selectedYear);
@@ -164,6 +68,32 @@ export default function QuestionsPage() {
     if (percentage >= 50) return 'text-yellow-600';
     return 'text-gray-500';
   };
+
+  // 로딩 상태 - 스켈레톤 UI
+  if (loading) {
+    return <QuestionsPageSkeleton />;
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-500 mb-2">❌ 데이터를 불러오는데 실패했습니다</p>
+            <p className="text-muted-foreground text-sm">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+              variant="outline"
+            >
+              다시 시도
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -229,7 +159,7 @@ export default function QuestionsPage() {
                       <div className="flex items-center space-x-2">
                         <BookOpen className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold text-foreground">
-                          {round.round}11회차
+                          {round.round}회차
                         </span>
                         {/* 정답률/미풀이 태그를 회차 옆에 배치 */}
                         {round.solvedQuestions > 0 ? (
@@ -282,33 +212,35 @@ export default function QuestionsPage() {
       )}
 
       {/* 통계 정보 */}
-      <Card className="mt-6 gap-2">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">현재 상태</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-zinc-100 rounded-lg p-3">
-              <div className="text-lg font-bold text-primary">
-                {filteredQuestions.length}
+      {selectedYearData && (
+        <Card className="mt-6 gap-2">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">현재 상태</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-zinc-100 rounded-lg p-3">
+                <div className="text-lg font-bold text-primary">
+                  {selectedYearData.rounds.reduce((sum, round) => sum + round.totalQuestions, 0)}
+                </div>
+                <div className="text-xs text-muted-foreground">총 문제</div>
               </div>
-              <div className="text-xs text-muted-foreground">총 문제</div>
-            </div>
-            <div className="bg-green-50 rounded-lg p-3">
-              <div className="text-lg font-bold text-green-600">
-                {filteredQuestions.filter(q => q.isSolved && q.isCorrect).length}
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="text-lg font-bold text-green-600">
+                  {selectedYearData.rounds.reduce((sum, round) => sum + round.correctAnswers, 0)}
+                </div>
+                <div className="text-xs text-muted-foreground">정답</div>
               </div>
-              <div className="text-xs text-muted-foreground">정답</div>
-            </div>
-            <div className="bg-orange-50 rounded-lg p-3">
-              <div className="text-lg font-bold text-orange-600">
-                {filteredQuestions.filter(q => q.isSolved).length}
+              <div className="bg-red-50 rounded-lg p-3">
+                <div className="text-lg font-bold text-red-600">
+                  {selectedYearData.rounds.reduce((sum, round) => sum + (round.solvedQuestions - round.correctAnswers), 0)}
+                </div>
+                <div className="text-xs text-muted-foreground">틀린 문제</div>
               </div>
-              <div className="text-xs text-muted-foreground">틀린 문제</div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 } 

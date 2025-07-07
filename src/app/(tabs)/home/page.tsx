@@ -4,20 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   TrendingUp,
-  Clock,
   Target,
   BookOpen,
-  Star,
   ArrowRight,
   Calendar,
-  Award, CircleAlert
+  CircleAlert
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useQuestions } from '@/hooks/useQuestions';
 import { Question, ExamStats } from '@/types/question';
+import { getUserId } from '@/lib/firebase';
 
 // 타입 정의
 interface StudyProgress {
@@ -40,10 +38,8 @@ export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
   
   useEffect(() => {
-    const { getUserId } = require('@/lib/firebase');
     const currentUserId = getUserId();
     setUserId(currentUserId);
-    console.log('🔐 현재 사용자 ID:', currentUserId);
   }, []);
   
   // Firebase 훅 사용

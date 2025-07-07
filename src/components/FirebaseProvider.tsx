@@ -10,7 +10,6 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     try {
       initializeFirebase();
-      console.log('Firebase 전역 초기화 완료');
 
       // 인증 상태 변경 감지
       const unsubscribe = onAuthStateChange((user) => {
@@ -18,12 +17,7 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
         setAuthLoading(false);
         
         if (user) {
-          console.log('🔐 사용자 인증됨:', user.uid);
-          console.log('🔐 사용자 정보:', { 
-            uid: user.uid, 
-            isAnonymous: user.isAnonymous,
-            createdAt: user.metadata.creationTime 
-          });
+          console.log('🔐 사용자 인증됨:');
         } else {
           console.log('🔐 사용자 로그아웃됨');
         }
@@ -39,7 +33,6 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
         }
       };
 
-      // 약간의 지연 후 자동 로그인 (Firebase 초기화 완료 대기)
       setTimeout(autoSignIn, 500);
 
       return () => unsubscribe();
