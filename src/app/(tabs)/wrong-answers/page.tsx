@@ -14,7 +14,9 @@ import {
   Edit3,
   Check,
   XIcon, CircleX, CheckCircle,
-  Bookmark, ArrowUpDown
+  Bookmark, ArrowUpDown,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,7 @@ export default function WrongAnswersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'count'>('date');
   const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const categories = [
     { id: 'all', name: '전체' },
@@ -152,16 +155,34 @@ export default function WrongAnswersPage() {
   };
 
   return (
-      <div className="min-h-screen bg-background p-4">
+    <div className="bg-background">
+      {/* 상단 고정 헤더 + 필터 영역 */}
+      <div className="bg-background sticky top-0 z-10 pt-4 px-4">
         {/* 헤더 */}
-        <div className="mb-6 pl-1">
-          <h1 className="text-2xl font-bold text-foreground mb-2">오답노트</h1>
-          <p className="text-muted-foreground">틀린 문제를 다시 풀어보세요🤔</p>
+        <div className="px-4 py-4 border-b border-border">
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground mb-2">오답노트</h1>
+              <p className="text-muted-foreground">틀린 문제를 다시 풀어보세요📝</p>
+            </div>
+            <Button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              variant="ghost"
+              size="sm"
+              className="p-2"
+            >
+              {isFilterOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
-        {/* 필터 섹션 */}
-        <Card className="mb-6 shadow-lg">
-          <CardContent className="px-4">
+        {/* 필터 내용 */}
+        {isFilterOpen && (
+          <div className="px-4 py-4 border-b border-border bg-muted/20">
             {/* 카테고리 필터 */}
             <div className="mb-4">
               <div className="flex items-center space-x-2 mb-3">
@@ -170,15 +191,15 @@ export default function WrongAnswersPage() {
               </div>
               <div className="flex space-x-2 overflow-x-auto pb-2">
                 {categories.map((category) => (
-                    <Button
-                        key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
-                        variant={selectedCategory === category.id ? "default" : "outline"}
-                        size="sm"
-                        className={`whitespace-nowrap ${selectedCategory === category.id ? 'text-green-500' : 'text-green'}`}
-                    >
-                      {category.name}
-                    </Button>
+                  <Button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    size="sm"
+                    className={`whitespace-nowrap ${selectedCategory === category.id ? 'text-green-500' : 'text-green'}`}
+                  >
+                    {category.name}
+                  </Button>
                 ))}
               </div>
             </div>
@@ -199,7 +220,7 @@ export default function WrongAnswersPage() {
                         : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
                     }`}
                   >
-                    틀린 순
+                    최신순
                   </button>
                   <button
                     onClick={() => setSortBy('count')}
@@ -209,7 +230,7 @@ export default function WrongAnswersPage() {
                         : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
                     }`}
                   >
-                    횟수 순
+                    오답횟수
                   </button>
                 </div>
               </div>
@@ -219,186 +240,190 @@ export default function WrongAnswersPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
               <Input
-                  type="text"
-                  placeholder="문제 검색..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 text-sm"
+                type="text"
+                placeholder="문제 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 text-sm"
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
+      </div>
 
+      {/* 스크롤 가능한 콘텐츠 */}
+      <div className="p-4">
         {/* 오답 목록 */}
         <div className="space-y-3">
           {filteredWrongAnswers.length === 0 ? (
-              <Card className="shadow-lg">
-                <CardContent className="text-center py-8">
-                  <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4"/>
-                  <p className="text-muted-foreground">틀린 문제가 없습니다.</p>
-                </CardContent>
-              </Card>
+            <Card className="shadow-lg">
+              <CardContent className="text-center py-8">
+                <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4"/>
+                <p className="text-muted-foreground">틀린 문제가 없습니다.</p>
+              </CardContent>
+            </Card>
           ) : (
-              filteredWrongAnswers.map((wrong) => (
-                  <Card className="shadow-lg" key={wrong.id}>
-                    <CardContent className="px-5">
-                      {/* 문제 정보 */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-0">
-                          <span className="text-sm font-medium text-primary">
-                            {wrong.year}년 {wrong.round}회차 {wrong.number}번
-                          </span>
+            filteredWrongAnswers.map((wrong) => (
+              <Card className="shadow-lg" key={wrong.id}>
+                <CardContent className="px-5">
+                  {/* 문제 정보 */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-0">
+                      <span className="text-sm font-medium text-primary">
+                        {wrong.year}년 {wrong.round}회차 {wrong.number}번
+                      </span>
+                      <Button
+                        onClick={() => handleToggleBookmark(wrong.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-4 mx-1 pt-0.5"
+                      >
+                        <Bookmark 
+                          className={`${
+                            wrong.isBookmarked 
+                              ? 'text-yellow-400 fill-yellow-400' 
+                              : 'text-muted-foreground hover:text-yellow-400'
+                          }`}
+                        />
+                      </Button>
+                    </div>
+                    <Badge variant="default" className={getWrongCountColor(wrong.wrongCount)}>
+                      {wrong.wrongCount}회 틀림
+                    </Badge>
+                  </div>
+
+                  <p className="text-sm text-foreground mb-3">
+                    {wrong.title}
+                  </p>
+
+                  {/* 답안 정보 */}
+                  <div className="bg-white border border-zinc-200 p-3 rounded-lg mb-3">
+                    <div className="flex items-center justify-start mb-3 ml-1">
+                      <div className="flex space-x-1 items-center text-sm font-medium text-green-700 mr-2">
+                        <CheckCircle size={18} className="pt-0.5 mr-1"/>
+                        <span className="text-sm font-bold text-green-600">  {wrong.correctAnswer}번</span>
+                      </div>
+                      { wrong.userAnswer && (
+                      <div className="flex space-x-1 items-center text-sm font-medium text-destructive mr-2">
+                        <CircleX size={18} className="pt-0.5 mr-1"/>
+                        <span className="text-sm font-bold text-destructive"> {wrong.userAnswer}번</span>
+                      </div>
+                      )}
+                    </div>
+
+                    {/* 선지들 */}
+                    <div className="space-y-2">
+                      {wrong.choices.map((choice, index) => (
+                        <div
+                          key={index}
+                          className={`p-2 rounded text-xs ${
+                            index + 1 === wrong.correctAnswer 
+                              ? 'bg-green-50 text-green-800' 
+                              : index + 1 === wrong.userAnswer 
+                                ? 'bg-red-50 text-red-800'
+                                : 'bg-gray-50 text-gray-600'
+                          }`}
+                        >
+                          <span className="font-medium mr-2">{index + 1}.</span>
+                          {choice}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 해설 */}
+                  <div className="mb-3 px-1">
+                    <h4 className="text-xs font-medium text-foreground mb-2">해설</h4>
+                    <p className="text-sm text-muted-foreground rounded-lg">
+                      {wrong.explanation}
+                    </p>
+                  </div>
+
+                  {/* 노트 편집 */}
+                  <div className="mb-3 p-1">
+                    {editingNote === wrong.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={wrong.note || ''}
+                          onChange={(e) => {
+                            setWrongAnswers(wrongAnswers.map(w =>
+                              w.id === wrong.id ? {...w, note: e.target.value} : w
+                            ));
+                          }}
+                          placeholder="노트를 입력하세요"
+                          className="resize-none text-sm"
+                          rows={2}
+                        />
+                        <div className="flex space-x-2 justify-end">
                           <Button
-                            onClick={() => handleToggleBookmark(wrong.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-4 mx-1 pt-0.5"
+                            onClick={() => setEditingNote(null)}
+                            variant="outline"
+                            size="icon"
+                            className="w-8 h-8"
                           >
-                            <Bookmark 
-                              className={`${
-                                wrong.isBookmarked 
-                                  ? 'text-yellow-400 fill-yellow-400' 
-                                  : 'text-muted-foreground hover:text-yellow-400'
-                              }`}
-                            />
+                            <XIcon className="h-4 w-4"/>
+                          </Button>
+                          <Button
+                            onClick={() => handleUpdateNote(wrong.id, wrong.note || '')}
+                            size="icon"
+                            className="w-8 h-8 text-green-500"
+                          >
+                            <Check className="h-4 w-4"/>
                           </Button>
                         </div>
-                        <Badge variant="default" className={getWrongCountColor(wrong.wrongCount)}>
-                          {wrong.wrongCount}회 틀림
-                        </Badge>
                       </div>
-
-                      <p className="text-sm text-foreground mb-3">
-                        {wrong.title}
-                      </p>
-
-                      {/* 답안 정보 */}
-                      <div className="bg-white border border-zinc-200 p-3 rounded-lg mb-3">
-                        <div className="flex items-center justify-start mb-3 ml-1">
-                          <div className="flex space-x-1 items-center text-sm font-medium text-green-700 mr-2">
-                            <CheckCircle size={18} className="pt-0.5 mr-1"/>
-                            <span className="text-sm font-bold text-green-600">  {wrong.correctAnswer}번</span>
-                          </div>
-                          { wrong.userAnswer && (
-                          <div className="flex space-x-1 items-center text-sm font-medium text-destructive mr-2">
-                            <CircleX size={18} className="pt-0.5 mr-1"/>
-                            <span className="text-sm font-bold text-destructive"> {wrong.userAnswer}번</span>
-                          </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          {wrong.note ? (
+                            <p className="text-sm text-muted-foreground bg-blue-50 p-2 rounded-lg">
+                              {wrong.note}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">노트가 없습니다.</p>
                           )}
                         </div>
+                        <Button
+                          onClick={() => setEditingNote(wrong.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="ml-2 text-zinc-500 hover:text-primary p-1"
+                        >
+                          <Edit3 className="h-4 w-4"/>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
 
-                        {/* 선지들 */}
-                        <div className="space-y-2">
-                          {wrong.choices.map((choice, index) => (
-                              <div
-                                  key={index}
-                                  className={`p-2 rounded text-xs ${
-                                      index + 1 === wrong.correctAnswer 
-                                  ? 'bg-green-50 text-green-800' 
-                                  : index + 1 === wrong.userAnswer 
-                                    ? 'bg-red-50 text-red-800'
-                                    : 'bg-gray-50 text-gray-600'
-                              }`}
-                            >
-                              <span className="font-medium mr-2">{index + 1}.</span>
-                              {choice}
-                            </div>
-                          ))}
-                        </div>
+                  {/* 하단 정보 */}
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <Badge variant="outline" className="text-xs">
+                      {wrong.category}
+                    </Badge>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3"/>
+                        <span>{wrong.lastWrongAt.toLocaleDateString('ko-KR')}</span>
                       </div>
 
-                      {/* 해설 */}
-                      <div className="mb-3 px-1">
-                        <h4 className="text-xs font-medium text-foreground mb-2">해설</h4>
-                        <p className="text-sm text-muted-foreground rounded-lg">
-                          {wrong.explanation}
-                        </p>
-                      </div>
-
-                      {/* 노트 편집 */}
-                      <div className="mb-3 p-1">
-                        {editingNote === wrong.id ? (
-                          <div className="space-y-2">
-                            <Textarea
-                              value={wrong.note || ''}
-                              onChange={(e) => {
-                                setWrongAnswers(wrongAnswers.map(w =>
-                                  w.id === wrong.id ? {...w, note: e.target.value} : w
-                                ));
-                              }}
-                              placeholder="노트를 입력하세요"
-                              className="resize-none text-sm"
-                              rows={2}
-                            />
-                            <div className="flex space-x-2 justify-end">
-                              <Button
-                                onClick={() => setEditingNote(null)}
-                                variant="outline"
-                                size="icon"
-                                className="w-8 h-8"
-                              >
-                                <XIcon className="h-4 w-4"/>
-                              </Button>
-                              <Button
-                                onClick={() => handleUpdateNote(wrong.id, wrong.note || '')}
-                                size="icon"
-                                className="w-8 h-8 text-green-500"
-                              >
-                                <Check className="h-4 w-4"/>
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              {wrong.note ? (
-                                <p className="text-sm text-muted-foreground bg-blue-50 p-2 rounded-lg">
-                                  {wrong.note}
-                                </p>
-                              ) : (
-                                <p className="text-xs text-muted-foreground italic">노트가 없습니다.</p>
-                              )}
-                            </div>
-                            <Button
-                              onClick={() => setEditingNote(wrong.id)}
-                              variant="ghost"
-                              size="sm"
-                              className="ml-2 text-zinc-500 hover:text-primary p-1"
-                            >
-                              <Edit3 className="h-4 w-4"/>
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 하단 정보 */}
-                      <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <Badge variant="outline" className="text-xs">
-                          {wrong.category}
-                        </Badge>
-
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3"/>
-                            <span>{wrong.lastWrongAt.toLocaleDateString('ko-KR')}</span>
-                          </div>
-
-                          <Button
-                              onClick={() => handleRetryQuestion(wrong.year, wrong.round)}
-                              variant="ghost"
-                              size="sm"
-                              className="text-primary hover:text-primary"
-                          >
-                            <RefreshCw className="h-4 w-4 mr-1"/>
-                            다시 풀기
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-              ))
+                      <Button
+                        onClick={() => handleRetryQuestion(wrong.year, wrong.round)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-1"/>
+                        다시 풀기
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           )}
         </div>
       </div>
+    </div>
   );
 } 

@@ -114,71 +114,107 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* 모바일 웹뷰 최적화 */
+  html {
+    height: 100dvh;
+    /* 스크롤바 숨김 - 모든 브라우저 지원 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+  
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
   body {
     @apply bg-background text-foreground;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: 'Pretendard', sans-serif;
+    height: 100dvh;
+    
+    /* 스크롤바 숨김 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    
+    /* 모바일 웹뷰에서 bounce 효과 방지 */
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* 모든 스크롤 가능한 요소에 스크롤바 숨김 적용 */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+  
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
 }
 
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-Thin.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-Thin.ttf') format('truetype');
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-ExtraLight.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-ExtraLight.ttf') format('truetype');
   font-weight: 200;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-Light.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-Regular.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-Medium.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-SemiBold.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-Bold.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-ExtraBold.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-ExtraBold.ttf') format('truetype');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Noto Sans KR';
-  src: url('/fonts/NotoSansKR/NotoSansKR-Black.ttf') format('truetype');
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard/Pretendard-Black.ttf') format('truetype');
   font-weight: 900;
   font-style: normal;
   font-display: swap;

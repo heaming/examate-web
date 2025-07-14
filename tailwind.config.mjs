@@ -4,7 +4,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          'Noto Sans KR',
+          'Pretendard',
           'sans-serif',
         ],
       },

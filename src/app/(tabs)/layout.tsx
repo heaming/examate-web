@@ -26,15 +26,18 @@ export default function TabsLayout({
     { name: '설정', href: '/settings', icon: Settings },
   ];
 
+  // 상세 기출문제 페이지인지 확인
+  const isDetailQuestionPage = pathname.match(/^\/questions\/\d+\/\d+$/);
+
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-dvh bg-background">
       {/* 메인 콘텐츠 영역 */}
       <main className="flex-1 overflow-y-auto pb-20">
         {children}
       </main>
       
       {/* 하단 탭 네비게이션 */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-2 py-1">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-2 py-2">
         <div className="flex justify-around">
           {tabs.map((tab) => {
             const Icon = tab.icon;

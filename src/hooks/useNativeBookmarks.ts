@@ -1,96 +1,76 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   BookmarkData, 
-  saveBookmark as nativeSaveBookmark, 
-  removeBookmark as nativeRemoveBookmark, 
+  saveBookmark, 
+  removeBookmark, 
   requestBookmarks, 
   setupNativeMessageListener 
-} from '@/lib/nativeStorage';
+} from '@/lib/native';
 
 export const useNativeBookmarks = () => {
   const [bookmarks, setBookmarks] = useState<BookmarkData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Native에서 북마크 데이터 받기
-  const handleBookmarksReceived = useCallback((receivedBookmarks: BookmarkData[]) => {
-    setBookmarks(receivedBookmarks);
-    setIsLoading(false);
+  // 북마크 목록 새로고침
+  const refreshBookmarks = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    requestBookmarks();
   }, []);
 
-  // 컴포넌트 마운트 시 리스너 설정 및 북마크 요청
-  useEffect(() => {
-    // Native 메시지 리스너 설정
-    const cleanup = setupNativeMessageListener(handleBookmarksReceived);
-    
-    // 북마크 목록 요청
-    requestBookmarks();
-    
-    // 클린업
-    return cleanup;
-  }, [handleBookmarksReceived]);
-
-  // 북마크 저장
-  const saveBookmark = useCallback((bookmark: Omit<BookmarkData, 'id' | 'bookmarkedAt'>) => {
-    const newBookmark: BookmarkData = {
-      ...bookmark,
-      id: `${bookmark.year}-${bookmark.round}-${bookmark.number}-${Date.now()}`,
-      bookmarkedAt: new Date().toISOString()
-    };
-    
-    nativeSaveBookmark(newBookmark);
-    
-    // 낙관적 업데이트
-    setBookmarks(prev => [...prev, newBookmark]);
+  // 북마크 추가
+  const addBookmark = useCallback((bookmark: BookmarkData) => {
+    try {
+      saveBookmark(bookmark);
+      // 낙관적 업데이트
+      setBookmarks(prev => [bookmark, ...prev]);
+    } catch (err) {
+      setError('북마크 저장 실패');
+      console.error('북마크 저장 실패:', err);
+    }
   }, []);
 
   // 북마크 삭제
-  const removeBookmark = useCallback((bookmarkId: string) => {
-    nativeRemoveBookmark(bookmarkId);
-    
-    // 낙관적 업데이트
-    setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+  const deleteBookmark = useCallback((bookmarkId: string) => {
+    try {
+      removeBookmark(bookmarkId);
+      // 낙관적 업데이트
+      setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+    } catch (err) {
+      setError('북마크 삭제 실패');
+      console.error('북마크 삭제 실패:', err);
+    }
   }, []);
 
-  // 북마크 여부 확인
+  // 북마크 존재 확인
   const isBookmarked = useCallback((questionId: string) => {
-    return bookmarks.some(b => b.questionId === questionId);
+    return bookmarks.some(bookmark => bookmark.questionId === questionId);
   }, [bookmarks]);
 
-  // 북마크 토글
-  const toggleBookmark = useCallback((question: {
-    questionId: string;
-    title: string;
-    category: string;
-    year: number;
-    round: number;
-    number: number;
-    answer?: string;
-    tags?: string[];
-  }) => {
-    const existingBookmark = bookmarks.find(b => b.questionId === question.questionId);
-    
-    if (existingBookmark) {
-      removeBookmark(existingBookmark.id);
-    } else {
-      saveBookmark({
-        questionId: question.questionId,
-        title: question.title,
-        category: question.category,
-        year: question.year,
-        round: question.round,
-        number: question.number,
-        answer: question.answer,
-        tags: question.tags || []
-      });
-    }
-  }, [bookmarks, saveBookmark, removeBookmark]);
+  // Native 메시지 리스너 설정
+  useEffect(() => {
+    const cleanup = setupNativeMessageListener({
+      onBookmarksReceived: (receivedBookmarks) => {
+        setBookmarks(receivedBookmarks);
+        setLoading(false);
+        setError(null);
+      }
+    });
+
+    // 컴포넌트 마운트 시 북마크 목록 요청
+    refreshBookmarks();
+
+    return cleanup;
+  }, [refreshBookmarks]);
 
   return {
     bookmarks,
-    isLoading,
-    saveBookmark,
-    removeBookmark,
-    isBookmarked,
-    toggleBookmark
+    loading,
+    error,
+    refreshBookmarks,
+    addBookmark,
+    deleteBookmark,
+    isBookmarked
   };
 }; 

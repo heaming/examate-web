@@ -341,267 +341,337 @@ export default function SettingsPage() {
   };
 
   return (
-      <div className="min-h-screen bg-background p-4">
+    <div className="bg-background">
+      {/* 상단 고정 헤더 */}
+      <div className="bg-background sticky top-0 z-10 pt-4 px-4">
         {/* 헤더 */}
-        <div className="mb-6 pl-1">
+        <div className="px-4 py-4 border-b border-border">
           <h1 className="text-2xl font-bold text-foreground mb-2">설정</h1>
-          <p className="text-muted-foreground">앱 설정을 관리하세요⚙️</p>
+          <p className="text-muted-foreground">앱 설정을 변경하세요⚙️</p>
         </div>
+      </div>
 
-        {/* 프로필 섹션 */}
-        <Card className="mb-6 shadow-lg">
-          <CardContent className="space-y-4">
-            {/* 온라인/오프라인 상태 표시 */}
-            <div className="p-3 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
-              <div className="flex items-center space-x-2 mb-2">
-                {isOnline ? (
-                    <Wifi className="h-4 w-4 text-green-600"/>
-                ) : (
-                    <WifiOff className="h-4 w-4 text-muted-foreground"/>
-                )}
-                <span className="text-sm font-medium text-foreground">연결 상태</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-xs text-muted-foreground">
-                  {isOnline ? '온라인 상태' : '오프라인 상태'}
-                </span>
-              </div>
-              {isOnline && firebaseUid && (
-                  <div
-                      className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs font-medium text-green-700 dark:text-green-300">Firebase UID:</span>
-                      <span className="text-xs text-green-600 dark:text-green-400 font-mono">{firebaseUid}</span>
+        {/* 스크롤 가능한 콘텐츠 */}
+        <div className="p-4">
+          {/* 프로필 섹션 */}
+          <Card className="mb-6 shadow-lg">
+            <CardContent className="space-y-4">
+              {/* 온라인/오프라인 상태 표시 */}
+              <div className="p-3 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
+                <div className="flex items-center space-x-2 mb-2">
+                  {isOnline ? (
+                      <Wifi className="h-4 w-4 text-green-600"/>
+                  ) : (
+                      <WifiOff className="h-4 w-4 text-muted-foreground"/>
+                  )}
+                  <span className="text-sm font-medium text-foreground">연결 상태</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-xs text-muted-foreground">
+                    {isOnline ? '온라인 상태' : '오프라인 상태'}
+                  </span>
+                </div>
+                {isOnline && firebaseUid && (
+                    <div
+                        className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-medium text-green-700 dark:text-green-300">Firebase UID:</span>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-mono">{firebaseUid}</span>
+                      </div>
                     </div>
-                  </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                {isOnline
-                    ? ''
-                    : '오프라인 상태입니다. 인터넷 연결을 확인해주세요.'
-                }
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">연도 / 회차</label>
-              <div className="flex gap-2">
-                <Select
-                    value={profile.targetYear}
-                    onValueChange={handleYearChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                    value={profile.targetRound}
-                    onValueChange={handleRoundChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {examRounds[profile.targetExam as keyof typeof examRounds]?.map((round) => {
-                      const year = profile.targetYear;
-                      const date = year + (roundDateTemplate[round as keyof typeof roundDateTemplate] || '');
-                      return (
-                          <SelectItem key={round} value={round}>
-                            {round} ({date})
-                          </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isOnline
+                      ? ''
+                      : '오프라인 상태입니다. 인터넷 연결을 확인해주세요.'
+                  }
+                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* 앱 설정 섹션 */}
-        <Card className="mb-6 gap-2 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-lg font-bold">앱 설정</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">연도 / 회차</label>
+                <div className="flex gap-2">
+                  <Select
+                      value={profile.targetYear}
+                      onValueChange={handleYearChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                      value={profile.targetRound}
+                      onValueChange={handleRoundChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {examRounds[profile.targetExam as keyof typeof examRounds]?.map((round) => {
+                        const year = profile.targetYear;
+                        const date = year + (roundDateTemplate[round as keyof typeof roundDateTemplate] || '');
+                        return (
+                            <SelectItem key={round} value={round}>
+                              {round} ({date})
+                            </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 앱 설정 섹션 */}
+          <Card className="mb-6 gap-2 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-lg font-bold">앱 설정</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Bell className="h-4 w-4 text-muted-foreground"/>
+                    <span className="text-sm font-medium text-foreground">알림</span>
+                  </div>
+                  <Switch
+                      checked={settings.notifications}
+                      onCheckedChange={() => handleSettingToggle('notifications')}
+                  />
+                </div>
+
+                {settings.notifications && (
+                    <>
+                      <div className="ml-7 space-y-2 pt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-sm text-muted-foreground">알림 시간</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <input
+                                type="number"
+                                min={0}
+                                max={23}
+                                value={customHour}
+                                onChange={e => {
+                                  let v = e.target.value.replace(/[^0-9]/g, '');
+                                  let num = Math.max(0, Math.min(23, Number(v)));
+                                  let str = isNaN(num) ? '00' : String(num).padStart(2, '0');
+                                  setCustomHour(str);
+                                  setSettings(prev => ({...prev, notificationTime: `${str}:${customMinute}`}));
+                                }}
+                                className="w-10 px-1 py-1 border rounded text-center text-sm bg-background"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                            />
+                            <span className="text-lg font-bold text-muted-foreground">:</span>
+                            <input
+                                type="number"
+                                min={0}
+                                max={59}
+                                value={customMinute}
+                                onChange={e => {
+                                  let v = e.target.value.replace(/[^0-9]/g, '');
+                                  let num = Math.max(0, Math.min(59, Number(v)));
+                                  let str = isNaN(num) ? '00' : String(num).padStart(2, '0');
+                                  setCustomMinute(str);
+                                  setSettings(prev => ({...prev, notificationTime: `${customHour}:${str}`}));
+                                }}
+                                className="w-10 px-1 py-1 border rounded text-center text-sm bg-background"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-sm text-muted-foreground">알림 요일</span>
+                          </div>
+                          <div className="flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-hide">
+                            {[
+                              {key: 'mon', label: '월'},
+                              {key: 'tue', label: '화'},
+                              {key: 'wed', label: '수'},
+                              {key: 'thu', label: '목'},
+                              {key: 'fri', label: '금'},
+                              {key: 'sat', label: '토'},
+                              {key: 'sun', label: '일'}
+                            ].map(({key, label}) => (
+                                <button
+                                    key={key}
+                                    onClick={() => handleNotificationDayToggle(key)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                                        settings.notificationDays.includes(key)
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-muted'
+                                    }`}
+                                    style={{minWidth: 36}}
+                                >
+                                  {label}
+                                </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                )}
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Bell className="h-4 w-4 text-muted-foreground"/>
-                  <span className="text-sm font-medium text-foreground">알림</span>
+                  <Moon className="h-4 w-4 text-muted-foreground"/>
+                  <span className="text-sm font-medium text-foreground">다크 모드</span>
                 </div>
                 <Switch
-                    checked={settings.notifications}
-                    onCheckedChange={() => handleSettingToggle('notifications')}
+                    checked={settings.darkMode}
+                    onCheckedChange={() => handleSettingToggle('darkMode')}
                 />
               </div>
+            </CardContent>
+          </Card>
 
-              {settings.notifications && (
-                  <>
-                    <div className="ml-7 space-y-2 pt-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm text-muted-foreground">알림 시간</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <input
-                              type="number"
-                              min={0}
-                              max={23}
-                              value={customHour}
-                              onChange={e => {
-                                let v = e.target.value.replace(/[^0-9]/g, '');
-                                let num = Math.max(0, Math.min(23, Number(v)));
-                                let str = isNaN(num) ? '00' : String(num).padStart(2, '0');
-                                setCustomHour(str);
-                                setSettings(prev => ({...prev, notificationTime: `${str}:${customMinute}`}));
-                              }}
-                              className="w-10 px-1 py-1 border rounded text-center text-sm bg-background"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                          />
-                          <span className="text-lg font-bold text-muted-foreground">:</span>
-                          <input
-                              type="number"
-                              min={0}
-                              max={59}
-                              value={customMinute}
-                              onChange={e => {
-                                let v = e.target.value.replace(/[^0-9]/g, '');
-                                let num = Math.max(0, Math.min(59, Number(v)));
-                                let str = isNaN(num) ? '00' : String(num).padStart(2, '0');
-                                setCustomMinute(str);
-                                setSettings(prev => ({...prev, notificationTime: `${customHour}:${str}`}));
-                              }}
-                              className="w-10 px-1 py-1 border rounded text-center text-sm bg-background"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm text-muted-foreground">알림 요일</span>
-                        </div>
-                        <div className="flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-hide">
-                          {[
-                            {key: 'mon', label: '월'},
-                            {key: 'tue', label: '화'},
-                            {key: 'wed', label: '수'},
-                            {key: 'thu', label: '목'},
-                            {key: 'fri', label: '금'},
-                            {key: 'sat', label: '토'},
-                            {key: 'sun', label: '일'}
-                          ].map(({key, label}) => (
-                              <button
-                                  key={key}
-                                  onClick={() => handleNotificationDayToggle(key)}
-                                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                                      settings.notificationDays.includes(key)
-                                          ? 'bg-primary text-primary-foreground shadow-sm'
-                                          : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-muted'
-                                  }`}
-                                  style={{minWidth: 36}}
-                              >
-                                {label}
-                              </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Moon className="h-4 w-4 text-muted-foreground"/>
-                <span className="text-sm font-medium text-foreground">다크 모드</span>
-              </div>
-              <Switch
-                  checked={settings.darkMode}
-                  onCheckedChange={() => handleSettingToggle('darkMode')}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 데이터 관리 섹션 */}
-        <Card className="mb-6 gap-2 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-lg font-bold">데이터 관리</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Dialog open={openResetDialog} onOpenChange={setOpenResetDialog}>
-              <DialogTrigger asChild>
-                <Button
-                    onClick={handleDataReset}
-                    className="w-full bg-rose-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2"/>
-                  데이터 초기화
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-white shadow-2xl">
-                <DialogHeader>
-                  <DialogTitle className="mb-2">정말 모든 데이터를 삭제할까요?</DialogTitle>
-                  <DialogDescription>
-                    <p>이 작업은 되돌릴 수 없습니다.</p>
-                    <p>앱의 모든 설정 및 저장된 정보가 삭제됩니다. </p>
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="flex flex-row justify-end gap-2">
+          {/* 데이터 관리 섹션 */}
+          <Card className="mb-6 gap-2 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-lg font-bold">데이터 관리</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Download className="h-4 w-4 text-muted-foreground"/>
+                    <span className="text-sm font-medium text-foreground">데이터 내보내기</span>
+                  </div>
                   <Button
+                      onClick={handleDataExport}
+                      variant="outline"
                       size="sm"
-                      className="shadow-sm border-zinc-800 bg-white text-zinc-600"
-                      onClick={() => setOpenResetDialog(false)}>
-                    취소
+                      className="text-xs"
+                  >
+                    내보내기
                   </Button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Upload className="h-4 w-4 text-muted-foreground"/>
+                    <span className="text-sm font-medium text-foreground">데이터 가져오기</span>
+                  </div>
+                  <div>
+                    <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleDataImport}
+                        className="hidden"
+                        id="import-file"
+                    />
+                    <Button
+                        onClick={() => document.getElementById('import-file')?.click()}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                    >
+                      가져오기
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Trash2 className="h-4 w-4 text-destructive"/>
+                    <span className="text-sm font-medium text-foreground">데이터 초기화</span>
+                  </div>
+                  <Dialog open={openResetDialog} onOpenChange={setOpenResetDialog}>
+                    <DialogTrigger asChild>
+                      <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs text-destructive hover:text-destructive"
+                      >
+                        초기화
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>데이터 초기화</DialogTitle>
+                        <DialogDescription>
+                          모든 학습 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <Button
+                            onClick={() => setOpenResetDialog(false)}
+                            variant="outline"
+                        >
+                          취소
+                        </Button>
+                        <Button
+                            onClick={confirmDataReset}
+                            variant="destructive"
+                        >
+                          초기화
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 정보 섹션 */}
+          <Card className="mb-6 gap-2 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+              <CardTitle className="text-lg font-bold">정보</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Info className="h-4 w-4 text-muted-foreground"/>
+                    <span className="text-sm font-medium text-foreground">앱 버전</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">v1.0.0</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Shield className="h-4 w-4 text-muted-foreground"/>
+                    <span className="text-sm font-medium text-foreground">개인정보 처리방침</span>
+                  </div>
                   <Button
+                      variant="ghost"
                       size="sm"
-                      className="shadow-sm bg-rose-600 text-white"
-                      onClick={confirmDataReset}>
-                    삭제
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    보기
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
+                </div>
 
-        {/* 기타 섹션 */}
-        <Card className="mb-6 gap-2 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-lg font-bold">기타</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 px-2">
-            <Button variant="ghost" className="w-full justify-between">
-              <div className="flex items-center space-x-3">
-                <HelpCircle className="h-4 w-4 text-muted-foreground"/>
-                <span className="text-sm font-medium text-foreground">도움말</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <HelpCircle className="h-4 w-4 text-muted-foreground"/>
+                    <span className="text-sm font-medium text-foreground">도움말</span>
+                  </div>
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    보기
+                  </Button>
+                </div>
               </div>
-              <span className="text-muted-foreground">→</span>
-            </Button>
-
-            <Button variant="ghost" className="w-full justify-between">
-              <div className="flex items-center space-x-3">
-                <Shield className="h-4 w-4 text-muted-foreground"/>
-                <span className="text-sm font-medium text-foreground">개인정보처리방침</span>
-              </div>
-              <span className="text-muted-foreground">→</span>
-            </Button>
-          </CardContent>
-        </Card>
-        <div className="pt-2 text-center">
-          <p className="text-xs text-muted-foreground">Examate v1.0.0</p>
-          <p className="text-xs text-muted-foreground">by mademee </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
   );

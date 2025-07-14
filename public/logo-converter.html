@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXAMATE 로고 다운로드</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo-preview {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .download-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 8px;
+        }
+        button {
+            background: linear-gradient(135deg, #3B82F6, #F97316);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .size-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .size-btn {
+            background: #6B7280;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>EXAMATE 로고 다운로드</h1>
+        
+        <div class="logo-preview">
+            <h3>로고 미리보기</h3>
+            <svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#2563EB;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="innerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+                        <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="128" height="128" rx="24" ry="24" fill="url(#mainGradient)" />
+                <rect x="12" y="12" width="104" height="104" rx="16" ry="16" fill="url(#innerBg)" />
+                <text x="64" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">E</text>
+                <circle cx="101" cy="27" r="8" fill="rgba(255,255,255,0.25)" />
+                <rect x="77" y="101" width="16" height="16" rx="2" ry="2" fill="rgba(255,255,255,0.3)" />
+                <polygon points="20,64 28,52 28,76" fill="rgba(255,255,255,0.2)" />
+            </svg>
+        </div>
+
+        <div class="download-section">
+            <h3>SVG 파일 다운로드</h3>
+            <p>벡터 형식으로 크기 조정 시 품질 손실이 없습니다.</p>
+            <button onclick="downloadSVG()">SVG 다운로드</button>
+        </div>
+
+        <div class="download-section">
+            <h3>PNG 파일 다운로드</h3>
+            <p>다양한 크기의 PNG 파일을 다운로드할 수 있습니다.</p>
+            <div class="size-options">
+                <button class="size-btn" onclick="downloadPNG(32)">32x32</button>
+                <button class="size-btn" onclick="downloadPNG(64)">64x64</button>
+                <button class="size-btn" onclick="downloadPNG(128)">128x128</button>
+                <button class="size-btn" onclick="downloadPNG(256)">256x256</button>
+                <button class="size-btn" onclick="downloadPNG(512)">512x512</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        function downloadSVG() {
+            const svgContent = `<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#2563EB;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="innerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+                        <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="128" height="128" rx="24" ry="24" fill="url(#mainGradient)" />
+                <rect x="12" y="12" width="104" height="104" rx="16" ry="16" fill="url(#innerBg)" />
+                <text x="64" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">E</text>
+                <circle cx="101" cy="27" r="8" fill="rgba(255,255,255,0.25)" />
+                <rect x="77" y="101" width="16" height="16" rx="2" ry="2" fill="rgba(255,255,255,0.3)" />
+                <polygon points="20,64 28,52 28,76" fill="rgba(255,255,255,0.2)" />
+            </svg>`;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'examate-logo.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadPNG(size) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+
+            const svgContent = `<svg width="${size}" height="${size}" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#2563EB;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#F97316;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="innerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+                        <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="128" height="128" rx="24" ry="24" fill="url(#mainGradient)" />
+                <rect x="12" y="12" width="104" height="104" rx="16" ry="16" fill="url(#innerBg)" />
+                <text x="64" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">E</text>
+                <circle cx="101" cy="27" r="8" fill="rgba(255,255,255,0.25)" />
+                <rect x="77" y="101" width="16" height="16" rx="2" ry="2" fill="rgba(255,255,255,0.3)" />
+                <polygon points="20,64 28,52 28,76" fill="rgba(255,255,255,0.2)" />
+            </svg>`;
+
+            const img = new Image();
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, size, size);
+                
+                canvas.toBlob(function(blob) {
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = `examate-logo-${size}x${size}.png`;
+                    a.click();
+                    URL.revokeObjectURL(downloadUrl);
+                });
+                
+                URL.revokeObjectURL(url);
+            };
+
+            img.src = url;
+        }
+    </script>
+</body>
+</html> 
