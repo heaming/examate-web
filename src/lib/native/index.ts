@@ -3,6 +3,9 @@
 // 공통
 export * from './common';
 
+// 홈 페이지
+export * from './home';
+
 // 북마크
 export * from './bookmarks';
 

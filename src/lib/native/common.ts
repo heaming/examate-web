@@ -1,7 +1,10 @@
 // 웹뷰 ↔ React Native 공통 통신 유틸리티
 
 export interface NativeMessage {
-  type: 
+  type:
+    // HOME
+    | 'GET_HOME_PAGE_DATA'
+
     // 북마크 관련
     | 'SAVE_BOOKMARK' 
     | 'REMOVE_BOOKMARK' 
@@ -22,7 +25,17 @@ export interface NativeMessage {
     | 'REMOVE_WRONG_ANSWER'
     // 시험 결과 관련
     | 'GET_EXAM_RESULTS' 
-    | 'SAVE_EXAM_RESULT';
+    | 'SAVE_EXAM_RESULT'
+    
+    // 응답 타입들
+    | 'HOME_PAGE_DATA_RESPONSE'
+    | 'BOOKMARKS_RESPONSE'
+    | 'STUDY_STATS_RESPONSE'
+    | 'TODAY_STATS_RESPONSE'
+    | 'RECENT_QUESTIONS_RESPONSE'
+    | 'WRONG_ANSWERS_RESPONSE'
+    | 'WRONG_ANSWER_STATS_RESPONSE'
+    | 'EXAM_RESULTS_RESPONSE';
   data?: any;
 }
 

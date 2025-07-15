@@ -6,7 +6,50 @@ import { RecentQuestionData } from './questions';
 import { ExamResult } from './exams';
 import { WrongAnswerRecord, WrongAnswerStats } from './wrongAnswers';
 
+// 홈 페이지 데이터 타입 (useNativeHomeData에서 import하지 않고 여기서 정의)
+export interface HomePageData {
+  totalProblems: number;
+  solvedProblems: number;
+  correctAnswers: number;
+  studyStreak: number;
+  accuracy: number;
+  progressPercentage: number;
+  todaySolved: number;
+  todayCorrect: number;
+  todayStudyTime: number;
+  todayBookmarks: number;
+  todayAccuracy: number;
+  recentQuestions: {
+    id: string;
+    questionId: string;
+    title: string;
+    category: string;
+    year: number;
+    round: number;
+    number: number;
+    userAnswer?: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+    solvedAt: string;
+    studyTime: number;
+  }[];
+  bookmarks: {
+    id: string;
+    questionId: string;
+    title: string;
+    category: string;
+    year: number;
+    round: number;
+    number: number;
+    answer?: string;
+    note?: string;
+    tags: string[];
+    bookmarkedAt: string;
+  }[];
+}
+
 export interface MessageHandlers {
+  onHomePageDataReceived?: (data: HomePageData) => void;
   onBookmarksReceived?: (bookmarks: BookmarkData[]) => void;
   onStudyStatsReceived?: (stats: StudyStats) => void;
   onTodayStatsReceived?: (stats: TodayStats) => void;
@@ -23,6 +66,11 @@ export const setupNativeMessageListener = (handlers: MessageHandlers): (() => vo
       const message = JSON.parse(event.data);
       
       switch (message.type) {
+        case 'HOME_PAGE_DATA_RESPONSE':
+          if (handlers.onHomePageDataReceived) {
+            handlers.onHomePageDataReceived(message.data);
+          }
+          break;
         case 'BOOKMARKS_RESPONSE':
           if (handlers.onBookmarksReceived) {
             handlers.onBookmarksReceived(message.data || []);
