@@ -16,9 +16,11 @@ import { Badge } from '@/components/ui/badge';
 import { useHomeData } from '@/hooks/useHomeData';
 import {getUserId} from "@/lib/firebase";
 import {useEffect, useState} from "react";
+import dayjs from "dayjs";
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
+  const { homeData, loading, error, refreshHomeData } = useHomeData();
 
   useEffect(() => {
     const currentUserId = getUserId();
@@ -26,7 +28,6 @@ export default function HomePage() {
   }, []);
 
   // Native 홈 데이터 훅 사용
-  const { homeData, loading, error, refreshHomeData } = useHomeData();
 
   return (
     <div className="bg-background">
@@ -61,8 +62,8 @@ export default function HomePage() {
               ></div>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>{homeData?.solvedProblems || 0}문제 해결</span>
-              <span>{homeData?.totalProblems || 0}문제 중</span>
+              <span>{homeData?.solvedCount || 0}문제 해결</span>
+              <span>{homeData?.totalQuestions || 0}문제 중</span>
             </div>
             </div>
 
@@ -106,7 +107,7 @@ export default function HomePage() {
               
               {/* 버튼 내용 */}
               <div className="relative z-10 flex flex-col items-center space-y-2">
-                <BookOpen style={{ width: '80px', height: '80px' }} />
+                <BookOpen style={{ width: '40px', height: '40px' }} />
                 <span className="font-medium text-lg">문제 풀기</span>
                 <span className="text-sm opacity-90">기출문제 학습</span>
               </div>
@@ -133,7 +134,7 @@ export default function HomePage() {
               
               {/* 버튼 내용 */}
               <div className="relative z-10 flex flex-col items-center space-y-2">
-                <CircleAlert style={{ width: '80px', height: '80px' }} />
+                <CircleAlert style={{ width: '40px', height: '40px' }} />
                 <span className="font-medium text-lg">오답 복습</span>
                 <span className="text-sm opacity-90">틀린 문제 다시</span>
               </div>
@@ -169,14 +170,16 @@ export default function HomePage() {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-xs text-muted-foreground">
-                        {question.year}년 {question.round}회차 {question.number}번
+                        {question.year}년 {question.round}회차 {question.questionNumber}번
                       </span>
-                      <Badge 
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        {question.category}
-                      </Badge>
+                      { question.tags &&
+                          <Badge
+                              variant="outline"
+                              className="text-xs"
+                          >
+                            {question.tags}
+                          </Badge>
+                      }
                       <Badge 
                         variant={question.isCorrect ? "default" : "destructive"}
                         className="text-xs"
@@ -186,10 +189,10 @@ export default function HomePage() {
                     </div>
                   </div>
                   <p className="text-sm text-foreground mb-1">
-                    {question.title.substring(0, 60)}...
+                    {question.questionText.substring(0, 60)}...
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(question.solvedAt).toLocaleDateString('ko-KR')}
+                    {dayjs(question.solvedAt).format()}
                   </p>
                 </div>
               ))

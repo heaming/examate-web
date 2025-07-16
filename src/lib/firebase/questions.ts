@@ -127,6 +127,52 @@ export const getQuestionById = async (
   }
 };
 
+// 여러 문제 ID로 문제들 가져오기
+export const getQuestionsByIds = async (
+  questionIds: string[],
+  examType: string = 'korean_history'
+): Promise<Question[]> => {
+  try {
+    // examType 유효성 검사
+    validateExamType(examType);
+
+    if (questionIds.length === 0) {
+      return [];
+    }
+
+    const collectionName = getCollectionName('questions', examType);
+    const questions: Question[] = [];
+
+    // Firebase에서는 한 번에 최대 10개의 문서만 조회할 수 있으므로 배치 처리
+    const batchSize = 10;
+    for (let i = 0; i < questionIds.length; i += batchSize) {
+      const batch = questionIds.slice(i, i + batchSize);
+      
+      const q = query(
+        collection(getFirestore(), collectionName),
+        where('__name__', 'in', batch)
+      );
+
+      const querySnapshot = await getDocs(q);
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        questions.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+        } as Question);
+      });
+    }
+
+    return questions;
+  } catch (error) {
+    console.error('여러 문제 가져오기 실패:', error);
+    return [];
+  }
+};
+
 // 문제 세트 가져오기
 export const getQuestionSet = async (
   year: number,
@@ -282,7 +328,7 @@ export const getExamStats = async (
     return {
       year,
       round,
-      examType,
+      examType: EXAM_TYPE,
       totalQuestions,
       solvedQuestions,
       correctAnswers,
@@ -366,7 +412,7 @@ export const searchQuestions = async (
 // 연도별 회차 데이터를 가져오는 함수
 export const getQuestionSetsByYear = async (): Promise<{ year: number; rounds: { round: number; totalQuestions: number; date: string; }[] }[]> => {
   try {
-    const collectionName = getCollectionName('questionSets', examType);
+    const collectionName = getCollectionName('questionSets', EXAM_TYPE);
     console.log('🔥 Firebase 컬렉션 이름:', collectionName); // 디버깅용
 
     const querySnapshot = await getDocs(collection(getFirestore(), collectionName));

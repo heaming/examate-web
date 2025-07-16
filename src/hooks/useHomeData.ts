@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { requestHomePageData, setupNativeMessageListener } from '@/lib/native';
-import { getTotalQuestionsCount } from '@/lib/firebase/questions';
-import {Question} from "@/types/question";
+import { requestHomePageData, setupNativeMessageListener, NativeHomePageData } from '@/lib/native';
+import {Question, RecentQuestion} from "@/types/question";
+import {getQuestionsByIds, getTotalQuestionsCount} from "@/lib/firebase/questions";
+import {StudyHistory} from "@/types/studyHistory";
 
 export interface HomePageData {
-  totalQuestions: number;
+  totalQuestions: number | null;
   solvedCount: number;
   correctCount: number;
   studyStreak: number;
@@ -14,95 +15,128 @@ export interface HomePageData {
   todayCorrect: number;
   todayStudyTime: number;
   todayBookmarks: number;
-  todayAccuracy: number;
-  recentQuestions: Question[];
+  recentQuestions: RecentQuestion[];
 }
+
+const createQuestionMap = (questions: Question[]): Map<string, Question> => {
+  const questionMap = new Map<string, Question>();
+  questions.forEach(question => {
+    questionMap.set(question.id, question);
+  });
+  return questionMap;
+};
+
+const convertToRecentQuestions = (
+    studyHistories: StudyHistory[],
+    questionMap: Map<string, Question>
+): RecentQuestion[] => {
+  return studyHistories
+      .map(history => {
+        const question = questionMap.get(history.questionId);
+        if (!question) {
+          console.warn(`Question not found for ID: ${history.questionId}`);
+          return null;
+        }
+
+        return {
+          id: history.id,
+          questionId: history.questionId,
+          solvedAt: history.solvedAt,
+          isCorrect: history.isCorrect,
+          userAnswer: history.userAnswer,
+          correctAnswer: history.correctAnswer,
+          year: question.year,
+          round: question.round,
+          examType: question.examType,
+          subject: question.subject,
+          questionNumber: question.questionNumber,
+          questionText: question.questionText,
+          options: question.options,
+          explanation: question.explanation,
+          difficulty: question.difficulty,
+          tags: question.tags,
+          questionImageUrl: question.questionImageUrl,
+          createdAt: question.createdAt,
+          updatedAt: question.updatedAt,
+        } as RecentQuestion;
+      })
+      .filter((item): item is RecentQuestion => item !== null);
+};
+
+const calculateProgressPercentage = (solvedCount: number, totalQuestions: number): number => {
+  if (totalQuestions <= 0) return 0;
+  return Math.round((solvedCount / totalQuestions) * 100 * 100) / 100;
+};
+
+const createHomePageData = (
+    nativeData: NativeHomePageData,
+    totalQuestions: number,
+    recentQuestions: RecentQuestion[]
+): HomePageData => {
+  const progressPercentage = calculateProgressPercentage(nativeData.solvedCount, totalQuestions);
+
+  return {
+    ...nativeData,
+    totalQuestions,
+    progressPercentage,
+    recentQuestions
+  };
+};
+
+const processNativeData = async (nativeData: NativeHomePageData): Promise<HomePageData> => {
+  const questionIds = nativeData.recentQuestions.map(history => history.questionId);
+
+  const [totalQuestions, questions] = await Promise.all([
+    await getTotalQuestionsCount(),
+    await getQuestionsByIds(questionIds)
+  ]);
+
+  const questionMap = createQuestionMap(questions);
+  const recentQuestions = convertToRecentQuestions(nativeData.recentQuestions, questionMap);
+
+  return createHomePageData(nativeData, totalQuestions, recentQuestions);
+};
 
 export const useHomeData = () => {
   const [homeData, setHomeData] = useState<HomePageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Firebase와 Native 데이터를 저장할 상태
-  const [firebaseData, setFirebaseData] = useState<{ totalProblems: number } | null>(null);
-  const [nativeData, setNativeData] = useState<HomePageData | null>(null);
-
-  // Firebase에서 전체 문제 개수 가져오기
-  const fetchFirebaseData = useCallback(async () => {
+  const handleNativeHomePageData = useCallback(async (nativeData: NativeHomePageData) => {
     try {
-      const totalProblems = await getTotalQuestionsCount();
-      setFirebaseData({ totalProblems });
+      setLoading(true);
+      setError(null);
+
+      const processedData = await processNativeData(nativeData);
+      
+      setHomeData(processedData);
+      setLoading(false);
+      setError(null);
+
     } catch (error) {
-      console.error('Firebase 데이터 가져오기 실패:', error);
-      setFirebaseData({ totalProblems: 0 });
+      console.error('Native 데이터 처리 실패:', error);
+      setError('데이터 처리 중 오류가 발생했습니다.');
+      setLoading(false);
     }
   }, []);
 
-  // Native 앱에 홈 데이터 요청
-  const fetchNativeData = useCallback(() => {
-    requestHomePageData();
-  }, []);
-
-  // Firebase와 Native 데이터를 병합
-  const mergeData = useCallback(() => {
-    if (!firebaseData || !nativeData) return;
-
-    const { totalProblems } = firebaseData;
-    const { solvedProblems } = nativeData;
-
-    // 진행률 재계산
-    const progressPercentage = totalProblems > 0
-        ? (solvedProblems / totalProblems) * 100
-        : 0;
-
-    const mergedData: HomePageData = {
-      ...nativeData,
-      totalProblems,
-      progressPercentage: Math.round(progressPercentage * 100) / 100
-    };
-
-    setHomeData(mergedData);
-    setLoading(false);
-    setError(null);
-  }, [firebaseData, nativeData]);
-
-  // 홈 데이터 로드 (Firebase와 Native 병렬 처리)
-  const loadHomeData = useCallback(async () => {
+  const refreshHomeData = () => {
     setLoading(true);
     setError(null);
+    requestHomePageData();
+  };
 
-    // Firebase와 Native 데이터를 병렬로 요청
-    await Promise.all([
-      fetchFirebaseData(),
-      fetchNativeData()
-    ]);
-  }, [fetchFirebaseData, fetchNativeData]);
-
-  // 홈 페이지 데이터 새로고침
-  const refreshHomeData = useCallback(() => {
-    loadHomeData();
-  }, [loadHomeData]);
-
-  // Native 메시지 리스너 설정
   useEffect(() => {
     const cleanup = setupNativeMessageListener({
-      onHomePageDataReceived: (data: HomePageData) => {
-        setNativeData(data);
-      }
+      onHomePageDataReceived: handleNativeHomePageData
     });
 
     return cleanup;
+  }, [handleNativeHomePageData]);
+
+  useEffect(() => {
+    refreshHomeData();
   }, []);
-
-  // 컴포넌트 마운트 시 데이터 로드
-  useEffect(() => {
-    loadHomeData();
-  }, [loadHomeData]);
-
-  // Firebase와 Native 데이터가 모두 준비되면 병합
-  useEffect(() => {
-    mergeData();
-  }, [mergeData]);
 
   return {
     homeData,

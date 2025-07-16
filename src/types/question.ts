@@ -50,4 +50,31 @@ export interface ExamStats {
   correctAnswers: number;
   accuracy: number;
   averageTime: number;
-} 
+}
+
+export interface RecentQuestion {
+  id: number;
+  questionId: string;
+  solvedAt: string;
+  isCorrect: boolean;
+  userAnswer: number;
+  correctAnswer: number;
+  year: number;
+  round: number;
+  examType: string;
+  subject: string;
+  questionNumber: string;
+  questionText: string;
+  options: {
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+  };
+  explanation?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  tags?: string[];
+  questionImageUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

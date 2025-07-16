@@ -5,13 +5,10 @@ import { StudyStats, TodayStats } from './stats';
 import { RecentQuestionData } from './questions';
 import { ExamResult } from './exams';
 import { WrongAnswerRecord, WrongAnswerStats } from './wrongAnswers';
-import {HomePageData} from "@/hooks/useHomeData";
-
-// 홈 페이지 데이터 타입 (useNativeHomeData에서 import하지 않고 여기서 정의)
-
+import {NativeHomePageData} from "@/lib/native/home";
 
 export interface MessageHandlers {
-  onHomePageDataReceived?: (data: HomePageData) => void;
+  onHomePageDataReceived?: (data: NativeHomePageData) => void;
   onBookmarksReceived?: (bookmarks: BookmarkData[]) => void;
   onStudyStatsReceived?: (stats: StudyStats) => void;
   onTodayStatsReceived?: (stats: TodayStats) => void;
@@ -21,7 +18,6 @@ export interface MessageHandlers {
   onExamResultsReceived?: (results: ExamResult[]) => void;
 }
 
-// Native에서 메시지 받기 위한 리스너 설정
 export const setupNativeMessageListener = (handlers: MessageHandlers): (() => void) => {
   const handleMessage = (event: MessageEvent) => {
     try {
