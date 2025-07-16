@@ -5,48 +5,10 @@ import { StudyStats, TodayStats } from './stats';
 import { RecentQuestionData } from './questions';
 import { ExamResult } from './exams';
 import { WrongAnswerRecord, WrongAnswerStats } from './wrongAnswers';
+import {HomePageData} from "@/hooks/useHomeData";
 
 // 홈 페이지 데이터 타입 (useNativeHomeData에서 import하지 않고 여기서 정의)
-export interface HomePageData {
-  totalProblems: number;
-  solvedProblems: number;
-  correctAnswers: number;
-  studyStreak: number;
-  accuracy: number;
-  progressPercentage: number;
-  todaySolved: number;
-  todayCorrect: number;
-  todayStudyTime: number;
-  todayBookmarks: number;
-  todayAccuracy: number;
-  recentQuestions: {
-    id: string;
-    questionId: string;
-    title: string;
-    category: string;
-    year: number;
-    round: number;
-    number: number;
-    userAnswer?: string;
-    correctAnswer: string;
-    isCorrect: boolean;
-    solvedAt: string;
-    studyTime: number;
-  }[];
-  bookmarks: {
-    id: string;
-    questionId: string;
-    title: string;
-    category: string;
-    year: number;
-    round: number;
-    number: number;
-    answer?: string;
-    note?: string;
-    tags: string[];
-    bookmarkedAt: string;
-  }[];
-}
+
 
 export interface MessageHandlers {
   onHomePageDataReceived?: (data: HomePageData) => void;

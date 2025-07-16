@@ -17,14 +17,13 @@ export const useQuestions = () => {
   // 특정 연도/회차 문제 목록 가져오기
   const getQuestions = async (
     year: number, 
-    round: number, 
-    examType: string = 'korean_history'
+    round: number
   ): Promise<Question[]> => {
     setLoading(true);
     setError(null);
     
     try {
-      const questions = await getQuestionsByYearAndRound(year, round, examType);
+      const questions = await getQuestionsByYearAndRound(year, round);
       return questions;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '문제 목록을 가져오는데 실패했습니다.';

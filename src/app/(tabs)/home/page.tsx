@@ -13,11 +13,20 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useNativeHomeData } from '@/hooks/useNativeHomeData';
+import { useHomeData } from '@/hooks/useHomeData';
+import {getUserId} from "@/lib/firebase";
+import {useEffect, useState} from "react";
 
 export default function HomePage() {
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const currentUserId = getUserId();
+    setUserId(currentUserId);
+  }, []);
+
   // Native 홈 데이터 훅 사용
-  const { homeData, loading, error, refreshHomeData } = useNativeHomeData();
+  const { homeData, loading, error, refreshHomeData } = useHomeData();
 
   return (
     <div className="bg-background">
