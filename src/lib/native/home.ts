@@ -1,24 +1,31 @@
-import { sendMessageToNative } from './common';
-import {StudyHistory} from "@/types/studyHistory";
+import { NativeAPIBase } from './base';
+import { StudyHistory } from "@/types/studyHistory";
 
 export interface NativeHomePageData {
-  totalQuestions: number | null;
-  solvedCount: number;
-  correctCount: number;
+  totalSolved: number;
+  totalCorrect: number;
   studyStreak: number;
   accuracy: number;
-  progressPercentage: number;
+  recentQuestions: StudyHistory[];
   todaySolved: number;
   todayCorrect: number;
-  todayStudyTime: number;
   todayBookmarks: number;
-  todayAccuracy: number;
-  recentQuestions: StudyHistory[];
 }
 
-// 홈 페이지 데이터 요청
-export const requestHomePageData = (): void => {
-  sendMessageToNative({
-    type: 'GET_HOME_PAGE_DATA'
-  });
-}; 
+export class HomeAPI extends NativeAPIBase {
+  private static instance: HomeAPI;
+
+  static getInstance() {
+    if (!this.instance) {
+      this.instance = new HomeAPI();
+    }
+    return this.instance;
+  }
+
+  async getHomeData(): Promise<NativeHomePageData> {
+    return this.sendMessage<NativeHomePageData>('GET_HOME_PAGE_DATA');
+  }
+}
+
+// 편의 함수
+export const getHomeData = () => HomeAPI.getInstance().getHomeData();

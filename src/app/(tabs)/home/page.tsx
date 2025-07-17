@@ -16,11 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { useHomeData } from '@/hooks/useHomeData';
 import {getUserId} from "@/lib/firebase";
 import {useEffect, useState} from "react";
-import dayjs from "dayjs";
 
 export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const { homeData, loading, error, refreshHomeData } = useHomeData();
+
+  console.log(userId);
 
   useEffect(() => {
     const currentUserId = getUserId();
@@ -62,7 +63,7 @@ export default function HomePage() {
               ></div>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>{homeData?.solvedCount || 0}문제 해결</span>
+              <span>{homeData?.totalSolved || 0}문제 해결</span>
               <span>{homeData?.totalQuestions || 0}문제 중</span>
             </div>
             </div>
@@ -192,7 +193,7 @@ export default function HomePage() {
                     {question.questionText.substring(0, 60)}...
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {dayjs(question.solvedAt).format()}
+                    {question.solvedAt}
                   </p>
                 </div>
               ))
@@ -212,7 +213,7 @@ export default function HomePage() {
             <CardTitle className="text-lg font-bold">오늘의 학습</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600 mb-1">{homeData?.todaySolved || 0}</div>
                 <div className="text-xs text-muted-foreground">푼 문제</div>
@@ -220,10 +221,6 @@ export default function HomePage() {
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600 mb-1">{homeData?.todayCorrect || 0}</div>
                 <div className="text-xs text-muted-foreground">정답</div>
-              </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600 mb-1">{homeData?.todayStudyTime || 0}</div>
-                <div className="text-xs text-muted-foreground">학습 시간(분)</div>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600 mb-1">{homeData?.todayBookmarks || 0}</div>

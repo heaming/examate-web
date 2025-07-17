@@ -24,7 +24,7 @@ export const setupNativeMessageListener = (handlers: MessageHandlers): (() => vo
       const message = JSON.parse(event.data);
       
       switch (message.type) {
-        case 'HOME_PAGE_DATA_RESPONSE':
+        case 'GET_HOME_PAGE_DATA':
           if (handlers.onHomePageDataReceived) {
             handlers.onHomePageDataReceived(message.data);
           }

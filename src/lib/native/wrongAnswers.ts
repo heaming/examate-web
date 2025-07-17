@@ -1,6 +1,4 @@
-// 오답노트 관련 Native 통신
-
-import { sendMessageToNative } from './common';
+import {NativeAPIBase} from "@/lib/native/base";
 
 export interface WrongAnswerRecord {
   id: string;
@@ -49,48 +47,31 @@ export interface WrongAnswerBookmarkUpdate {
   isBookmarked: boolean;
 }
 
-// 오답 기록 저장
-export const saveWrongAnswer = (wrongAnswer: WrongAnswerUpdate): void => {
-  sendMessageToNative({
-    type: 'SAVE_WRONG_ANSWER',
-    data: wrongAnswer
-  });
-};
 
-// 오답 목록 요청
-export const requestWrongAnswers = (): void => {
-  sendMessageToNative({
-    type: 'GET_WRONG_ANSWERS'
-  });
-};
+export class WrongAnswerAPI extends NativeAPIBase {
+  private static instance: WrongAnswerAPI;
 
-// 오답 통계 요청
-export const requestWrongAnswerStats = (): void => {
-  sendMessageToNative({
-    type: 'GET_WRONG_ANSWER_STATS'
-  });
-};
+  static getInstance() {
+    if (!this.instance) {
+      this.instance = new WrongAnswerAPI();
+    }
+    return this.instance;
+  }
 
-// 오답 노트 업데이트
-export const updateWrongAnswerNote = (noteUpdate: WrongAnswerNoteUpdate): void => {
-  sendMessageToNative({
-    type: 'UPDATE_WRONG_ANSWER_NOTE',
-    data: noteUpdate
-  });
-};
+  async getWrongAnswers(): Promise<WrongAnswerRecord[]> {
+    return this.sendMessage<WrongAnswerRecord[]>('GET_WRONG_ANSWERS');
+  }
 
-// 오답 북마크 토글
-export const toggleWrongAnswerBookmark = (bookmarkUpdate: WrongAnswerBookmarkUpdate): void => {
-  sendMessageToNative({
-    type: 'TOGGLE_WRONG_ANSWER_BOOKMARK',
-    data: bookmarkUpdate
-  });
-};
+  async saveWrongAnswer(wrongAnswer: any): Promise<void> {
+    return this.sendMessage<void>('SAVE_WRONG_ANSWER', wrongAnswer);
+  }
 
-// 오답 기록 삭제 (정답으로 풀었을 때)
-export const removeWrongAnswer = (questionId: string): void => {
-  sendMessageToNative({
-    type: 'REMOVE_WRONG_ANSWER',
-    data: { questionId }
-  });
-}; 
+  async updateNote(questionId: string, note: string): Promise<void> {
+    return this.sendMessage<void>('UPDATE_WRONG_ANSWER_NOTE', { questionId, note });
+  }
+}
+
+// 편의 함수들
+export const getWrongAnswers = () => WrongAnswerAPI.getInstance().getWrongAnswers();
+export const saveWrongAnswer = (wrongAnswer: any) => WrongAnswerAPI.getInstance().saveWrongAnswer(wrongAnswer);
+export const updateWrongAnswerNote = (questionId: string, note: string) => WrongAnswerAPI.getInstance().updateNote(questionId, note);

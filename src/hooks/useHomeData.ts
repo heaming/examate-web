@@ -1,19 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { requestHomePageData, setupNativeMessageListener, NativeHomePageData } from '@/lib/native';
 import {Question, RecentQuestion} from "@/types/question";
 import {getQuestionsByIds, getTotalQuestionsCount} from "@/lib/firebase/questions";
 import {StudyHistory} from "@/types/studyHistory";
+import {getHomeData, NativeHomePageData} from "@/lib/native";
 
 export interface HomePageData {
   totalQuestions: number | null;
-  solvedCount: number;
-  correctCount: number;
+  totalSolved: number;
+  totalCorrect: number;
   studyStreak: number;
   accuracy: number;
   progressPercentage: number;
   todaySolved: number;
   todayCorrect: number;
-  todayStudyTime: number;
   todayBookmarks: number;
   recentQuestions: RecentQuestion[];
 }
@@ -63,9 +62,9 @@ const convertToRecentQuestions = (
       .filter((item): item is RecentQuestion => item !== null);
 };
 
-const calculateProgressPercentage = (solvedCount: number, totalQuestions: number): number => {
+const calculateProgressPercentage = (totalSolved: number, totalQuestions: number): number => {
   if (totalQuestions <= 0) return 0;
-  return Math.round((solvedCount / totalQuestions) * 100 * 100) / 100;
+  return Math.round((totalSolved / totalQuestions) * 100 * 100) / 100;
 };
 
 const createHomePageData = (
@@ -73,7 +72,7 @@ const createHomePageData = (
     totalQuestions: number,
     recentQuestions: RecentQuestion[]
 ): HomePageData => {
-  const progressPercentage = calculateProgressPercentage(nativeData.solvedCount, totalQuestions);
+  const progressPercentage = calculateProgressPercentage(nativeData.totalSolved, totalQuestions);
 
   return {
     ...nativeData,
@@ -81,6 +80,40 @@ const createHomePageData = (
     progressPercentage,
     recentQuestions
   };
+};
+
+const createDefaultHomeData = async (): Promise<HomePageData> => {
+  try {
+    const totalQuestions = await getTotalQuestionsCount();
+
+    return {
+      totalQuestions,
+      totalSolved: 0,
+      totalCorrect: 0,
+      studyStreak: 0,
+      accuracy: 0,
+      progressPercentage: 0,
+      todaySolved: 0,
+      todayCorrect: 0,
+      todayBookmarks: 0,
+      recentQuestions: []
+    };
+  } catch (error) {
+    console.error('기본 홈 데이터 생성 실패:', error);
+
+    return {
+      totalQuestions: 0,
+      totalSolved: 0,
+      totalCorrect: 0,
+      studyStreak: 0,
+      accuracy: 0,
+      progressPercentage: 0,
+      todaySolved: 0,
+      todayCorrect: 0,
+      todayBookmarks: 0,
+      recentQuestions: []
+    };
+  }
 };
 
 const processNativeData = async (nativeData: NativeHomePageData): Promise<HomePageData> => {
@@ -102,46 +135,35 @@ export const useHomeData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleNativeHomePageData = useCallback(async (nativeData: NativeHomePageData) => {
+  const loadHomeData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const nativeData = await getHomeData();
       const processedData = await processNativeData(nativeData);
-      
+
       setHomeData(processedData);
-      setLoading(false);
-      setError(null);
 
     } catch (error) {
-      console.error('Native 데이터 처리 실패:', error);
-      setError('데이터 처리 중 오류가 발생했습니다.');
+      console.warn('네이티브 데이터 로드 실패, 기본값 사용:', error);
+
+      const defaultData = await createDefaultHomeData();
+      setHomeData(defaultData);
+
+    } finally {
       setLoading(false);
     }
   }, []);
 
-  const refreshHomeData = () => {
-    setLoading(true);
-    setError(null);
-    requestHomePageData();
-  };
-
   useEffect(() => {
-    const cleanup = setupNativeMessageListener({
-      onHomePageDataReceived: handleNativeHomePageData
-    });
-
-    return cleanup;
-  }, [handleNativeHomePageData]);
-
-  useEffect(() => {
-    refreshHomeData();
-  }, []);
+    loadHomeData();
+  }, [loadHomeData]);
 
   return {
     homeData,
     loading,
     error,
-    refreshHomeData
+    refreshHomeData: loadHomeData
   };
 };

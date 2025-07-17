@@ -1,8 +1,6 @@
-// 북마크 관련 Native 통신
+import { NativeAPIBase } from './base';
 
-import { sendMessageToNative } from './common';
-
-export interface BookmarkData {
+export interface NativeBookmarkData {
   id: string;
   questionId: string;
   title: string;
@@ -13,28 +11,33 @@ export interface BookmarkData {
   answer?: string;
   note?: string;
   tags: string[];
-  bookmarkedAt: string; // ISO string
+  bookmarkedAt: string;
 }
 
-// 북마크 저장
-export const saveBookmark = (bookmark: BookmarkData): void => {
-  sendMessageToNative({
-    type: 'SAVE_BOOKMARK',
-    data: bookmark
-  });
-};
+export class BookmarkAPI extends NativeAPIBase {
+  private static instance: BookmarkAPI;
 
-// 북마크 삭제
-export const removeBookmark = (bookmarkId: string): void => {
-  sendMessageToNative({
-    type: 'REMOVE_BOOKMARK',
-    data: { id: bookmarkId }
-  });
-};
+  static getInstance() {
+    if (!this.instance) {
+      this.instance = new BookmarkAPI();
+    }
+    return this.instance;
+  }
 
-// 북마크 목록 요청
-export const requestBookmarks = (): void => {
-  sendMessageToNative({
-    type: 'GET_BOOKMARKS'
-  });
-}; 
+  async getBookmarks(): Promise<NativeBookmarkData[]> {
+    return this.sendMessage<NativeBookmarkData[]>('GET_BOOKMARKS');
+  }
+
+  async saveBookmark(bookmark: NativeBookmarkData): Promise<void> {
+    return this.sendMessage<void>('SAVE_BOOKMARK', bookmark);
+  }
+
+  async removeBookmark(bookmarkId: string): Promise<void> {
+    return this.sendMessage<void>('REMOVE_BOOKMARK', { id: bookmarkId });
+  }
+}
+
+// 편의 함수들
+export const getBookmarks = () => BookmarkAPI.getInstance().getBookmarks();
+export const saveBookmark = (bookmark: NativeBookmarkData) => BookmarkAPI.getInstance().saveBookmark(bookmark);
+export const removeBookmark = (bookmarkId: string) => BookmarkAPI.getInstance().removeBookmark(bookmarkId);
