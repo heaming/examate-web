@@ -24,6 +24,10 @@ export class BookmarkAPI extends NativeAPIBase {
     return this.instance;
   }
 
+  async getBookmarkData() {
+    return this.sendMessage<{bookmarks: NativeBookmarkData[], totalCount: number}>('GET_BOOKMARK_DATA', { limit: 10, offset: 0 });
+  }
+
   async getBookmarks(): Promise<NativeBookmarkData[]> {
     return this.sendMessage<NativeBookmarkData[]>('GET_BOOKMARKS');
   }
@@ -38,6 +42,7 @@ export class BookmarkAPI extends NativeAPIBase {
 }
 
 // 편의 함수들
+export const getBookmarkData = () => BookmarkAPI.getInstance().getBookmarkData();
 export const getBookmarks = () => BookmarkAPI.getInstance().getBookmarks();
 export const saveBookmark = (bookmark: NativeBookmarkData) => BookmarkAPI.getInstance().saveBookmark(bookmark);
 export const removeBookmark = (bookmarkId: string) => BookmarkAPI.getInstance().removeBookmark(bookmarkId);

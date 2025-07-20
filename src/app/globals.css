@@ -118,7 +118,6 @@
   /* 모바일 웹뷰 최적화 */
   html {
     height: 100dvh;
-    /* 스크롤바 숨김 - 모든 브라우저 지원 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* Internet Explorer 10+ */
   }

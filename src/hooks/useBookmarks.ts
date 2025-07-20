@@ -1,22 +1,40 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  BookmarkData, 
-  saveBookmark, 
-  removeBookmark, 
-  requestBookmarks, 
-  setupNativeMessageListener 
+import {
+  saveBookmark,
+  removeBookmark,
+  NativeBookmarkData,
+  getBookmarkData
 } from '@/lib/native';
 
-export const useNativeBookmarks = () => {
-  const [bookmarks, setBookmarks] = useState<BookmarkData[]>([]);
-  const [loading, setLoading] = useState(false);
+export const useBookmarks = () => {
+  const [bookmarks, setBookmarks] = useState<NativeBookmarkData[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const loadBookmarkData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const nativeData = await getBookmarkData();
+      setBookmarks(nativeData.bookmarks);
+      setTotalCount(nativeData.totalCount);
+
+    } catch (error) {
+      console.warn('네이티브 데이터 로드 실패, 기본값 사용:', error);
+      setBookmarks([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // 북마크 목록 새로고침
   const refreshBookmarks = useCallback(() => {
     setLoading(true);
     setError(null);
-    requestBookmarks();
+    loadBookmarkData();
   }, []);
 
   // 북마크 추가
@@ -48,24 +66,13 @@ export const useNativeBookmarks = () => {
     return bookmarks.some(bookmark => bookmark.questionId === questionId);
   }, [bookmarks]);
 
-  // Native 메시지 리스너 설정
   useEffect(() => {
-    const cleanup = setupNativeMessageListener({
-      onBookmarksReceived: (receivedBookmarks) => {
-        setBookmarks(receivedBookmarks);
-        setLoading(false);
-        setError(null);
-      }
-    });
-
-    // 컴포넌트 마운트 시 북마크 목록 요청
-    refreshBookmarks();
-
-    return cleanup;
-  }, [refreshBookmarks]);
+    loadBookmarkData();
+  }, [loadBookmarkData]);
 
   return {
     bookmarks,
+    totalCount,
     loading,
     error,
     refreshBookmarks,

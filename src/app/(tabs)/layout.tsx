@@ -26,9 +26,6 @@ export default function TabsLayout({
     { name: '설정', href: '/settings', icon: Settings },
   ];
 
-  // 상세 기출문제 페이지인지 확인
-  const isDetailQuestionPage = pathname.match(/^\/questions\/\d+\/\d+$/);
-
   return (
     <div className="flex flex-col h-dvh bg-background">
       {/* 메인 콘텐츠 영역 */}
