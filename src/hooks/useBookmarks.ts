@@ -3,7 +3,7 @@ import {
   saveBookmark,
   removeBookmark,
   NativeBookmarkData,
-  getBookmarkData
+  getBookmarkData, updateBookmark
 } from '@/lib/native';
 
 export const useBookmarks = () => {
@@ -38,11 +38,10 @@ export const useBookmarks = () => {
   }, []);
 
   // 북마크 추가
-  const addBookmark = useCallback((bookmark: BookmarkData) => {
+  const addBookmark = useCallback((bookmark: NativeBookmarkData) => {
     try {
-      saveBookmark(bookmark);
-      // 낙관적 업데이트
       setBookmarks(prev => [bookmark, ...prev]);
+      saveBookmark(bookmark);
     } catch (err) {
       setError('북마크 저장 실패');
       console.error('북마크 저장 실패:', err);
@@ -50,20 +49,43 @@ export const useBookmarks = () => {
   }, []);
 
   // 북마크 삭제
-  const deleteBookmark = useCallback((bookmarkId: string) => {
+  const deleteBookmark = useCallback(async (bookmarkId: string) => {
+    const originalBookmarks = bookmarks;
+    setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+
     try {
-      removeBookmark(bookmarkId);
-      // 낙관적 업데이트
-      setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+      await removeBookmark(bookmarkId);
     } catch (err) {
+      setBookmarks(originalBookmarks);
       setError('북마크 삭제 실패');
       console.error('북마크 삭제 실패:', err);
+      throw err;
     }
-  }, []);
+  }, [bookmarks]);
 
   // 북마크 존재 확인
   const isBookmarked = useCallback((questionId: string) => {
     return bookmarks.some(bookmark => bookmark.questionId === questionId);
+  }, [bookmarks]);
+
+  // 북마크 업데이트
+  const updateBookmark = useCallback(async (bookmarkId: string, updates: Partial<NativeBookmarkData>) => {
+    // 1. 즉시 UI 업데이트
+    const originalBookmarks = bookmarks;
+    setBookmarks(prev => prev.map(b =>
+        b.id === bookmarkId ? { ...b, ...updates } : b
+    ));
+
+    try {
+      // 2. 실제 업데이트
+      await updateBookmark(bookmarkId, updates);
+    } catch (err) {
+      // 3. 실패시 원복
+      setBookmarks(originalBookmarks);
+      setError('북마크 수정 실패');
+      console.error('북마크 수정 실패:', err);
+      throw err;
+    }
   }, [bookmarks]);
 
   useEffect(() => {
@@ -78,6 +100,7 @@ export const useBookmarks = () => {
     refreshBookmarks,
     addBookmark,
     deleteBookmark,
+    updateBookmark,
     isBookmarked
   };
 }; 

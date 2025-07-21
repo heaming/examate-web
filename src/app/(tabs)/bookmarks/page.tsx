@@ -5,10 +5,10 @@ import {
   Bookmark,
   Search,
   Filter,
-  Trash2,
   Edit3,
   Calendar,
-  Tag, BookOpen, XIcon, Check,
+  XIcon,
+  Check,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
@@ -17,99 +17,80 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import {Question} from "@/app/(tabs)/questions/page";
-
-interface BookmarkedQuestion {
-  id: string;
-  questionId: string;
-  title: string;
-  category: string;
-  year: number;
-  round: number;
-  number: number;
-  answer?: string;
-  note?: string;
-  tags: string[];
-  bookmarkedAt: Date;
-}
+import dayjs from "dayjs";
+import {useBookmarks} from "@/hooks/useBookmarks";
 
 export default function BookmarksPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const {
+    bookmarks,
+    totalCount,
+    loading,
+    error,
+    refreshBookmarks,
+    addBookmark,
+    deleteBookmark,
+    updateBookmark,
+    isBookmarked
+  } = useBookmarks();
+  const [allTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(2024);
+  const [selectedYear, setSelectedYear] = useState<number>(dayjs().year);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [displayBookmarks, setDisplayBookmarks] = useState(bookmarks);
 
-  const categories = [
-    { id: 'all', name: '전체' },
-    { id: 'software', name: '소프트웨어 설계' },
-    { id: 'development', name: '소프트웨어 개발' },
-    { id: 'testing', name: '소프트웨어 테스트' },
-    { id: 'deployment', name: '소프트웨어 배포' },
-    { id: 'maintenance', name: '소프트웨어 유지보수' },
-  ];
 
-  const [bookmarks, setBookmarks] = useState<BookmarkedQuestion[]>([
-    {
-      id: '1',
-      questionId: 'q1',
-      title: '객체지향 설계 원칙 중 단일 책임 원칙(SRP)에 대한 설명으로 옳은 것은?',
-      category: '소프트웨어 설계',
-      year: 2024,
-      round: 1,
-      number: 1,
-      answer: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
-      note: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
-      tags: ['객체지향', '설계원칙', '중요'],
-      bookmarkedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-    },
-    {
-      id: '2',
-      questionId: 'q2',
-      title: '다음 중 RESTful API 설계 원칙이 아닌 것은?',
-      category: '소프트웨어 개발',
-      year: 2024,
-      round: 1,
-      number: 2,
-      answer: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
-      tags: ['API', 'REST'],
-      bookmarkedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-    },
-    {
-      id: '3',
-      questionId: 'q3',
-      title: '화이트박스 테스트 기법 중 분기 커버리지(Branch Coverage)에 대한 설명으로 옳은 것은?',
-      category: '소프트웨어 테스트',
-      year: 2023,
-      round: 3,
-      number: 15,
-      note: '분기 커버리지는 모든 분기문의 true/false 경로를 테스트하는 기법이다.',
-      answer: 'SRP는 하나의 클래스는 하나의 책임만 가져야 한다는 원칙이다.',
-      tags: ['테스트', '화이트박스', '커버리지'],
-      bookmarkedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    }
-  ]);
+  const filteredBookmarks = displayBookmarks.filter(bookmark => {
+    // 태그가 선택되지 않았으면 모든 북마크 표시
+    const tagMatch = selectedTags.length === 0 ||
+        selectedTags.some(tag => bookmark.tags?.includes(tag));
 
-  const filteredBookmarks = bookmarks.filter(bookmark => {
-    const categoryMatch = selectedCategory === 'all' || 
-      bookmark.category === categories.find(c => c.id === selectedCategory)?.name;
-    const searchMatch = bookmark.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bookmark.note?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return categoryMatch && searchMatch;
+    const searchMatch = bookmark.questionText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bookmark.note?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return tagMatch && searchMatch;
   });
 
-  const handleDeleteBookmark = (id: string) => {
-    setBookmarks(bookmarks.filter(b => b.id !== id));
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+        prev.includes(tag)
+            ? prev.filter(t => t !== tag)
+            : [...prev, tag]
+    );
   };
 
-  const handleUpdateNote = (id: string, note: string) => {
-    setBookmarks(bookmarks.map(b => 
-      b.id === id ? { ...b, note } : b
+  const handleDeleteBookmark = async (id: string) => {
+    // 1. 즉시 UI에서 제거 (낙관적 업데이트)
+    setDisplayBookmarks(prev => prev.filter(b => b.id !== id));
+
+    try {
+      // 2. 백엔드에서 실제 삭제
+      await deleteBookmark(id);
+    } catch (error) {
+      // 3. 실패시 UI 복원 + 사용자에게 알림
+      setDisplayBookmarks(bookmarks); // 원래 상태로 복원
+      alert('삭제에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleUpdateNote = async (id: string, note: string) => {
+    // 1. 즉시 UI 업데이트
+    setDisplayBookmarks(prev => prev.map(b =>
+        b.id === id ? { ...b, note } : b
     ));
     setEditingNote(null);
-  };
 
+    try {
+      // 2. 백엔드 업데이트 (updateBookmark 함수가 훅에 있다면)
+      await updateBookmark(id, { note });
+    } catch (error) {
+      // 3. 실패시 복원
+      setDisplayBookmarks(bookmarks);
+      alert('저장에 실패했습니다.');
+      setEditingNote(id); // 편집 모드 다시 활성화
+    }
+  };
   return (
     <div className="bg-background">
       {/* 상단 고정 헤더 + 필터 영역 */}
@@ -146,16 +127,18 @@ export default function BookmarksPage() {
                 <span className="text-sm font-semibold text-foreground">카테고리</span>
               </div>
               <div className="flex space-x-2 overflow-x-auto pb-2">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    variant={selectedCategory === category.id ? "default" : "outline"}
-                    size="sm"
-                    className={`transition-none whitespace-nowrap ${selectedCategory === category.id ? 'text-green-500': 'text-green'}`}
-                  >
-                    {category.name}
-                  </Button>
+                {allTags.map((tag) => (
+                    <Button
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        variant={selectedTags.includes(tag) ? "default" : "outline"}
+                        size="sm"
+                        className={`transition-none whitespace-nowrap ${
+                            selectedTags.includes(tag) ? 'text-green-500' : 'text-green'
+                        }`}
+                    >
+                      {tag}
+                    </Button>
                 ))}
               </div>
             </div>
@@ -224,7 +207,7 @@ export default function BookmarksPage() {
                           <Textarea
                               value={bookmark.note || ''}
                               onChange={(e) => {
-                                setBookmarks(bookmarks.map(b =>
+                                setBookmarks(displayBookmarks.map(b =>
                                     b.id === bookmark.id ? {...b, note: e.target.value} : b
                                 ));
                               }}
@@ -281,7 +264,7 @@ export default function BookmarksPage() {
 
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3"/>
-                      <span>{bookmark.bookmarkedAt.toLocaleDateString('ko-KR')}</span>
+                      <span>{bookmark.bookmarkedAt}</span>
                     </div>
                   </div>
                 </CardContent>

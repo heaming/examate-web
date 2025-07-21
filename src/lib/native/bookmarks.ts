@@ -3,14 +3,15 @@ import { NativeAPIBase } from './base';
 export interface NativeBookmarkData {
   id: string;
   questionId: string;
-  title: string;
-  category: string;
   year: number;
   round: number;
-  number: number;
-  answer?: string;
+  questionNumber: string;
+  questionText: string;
+  questionImageUrl?: string;
+  correctAnswer: number;
+  explanation?: string;
   note?: string;
-  tags: string[];
+  tags?: string[];
   bookmarkedAt: string;
 }
 
@@ -39,6 +40,10 @@ export class BookmarkAPI extends NativeAPIBase {
   async removeBookmark(bookmarkId: string): Promise<void> {
     return this.sendMessage<void>('REMOVE_BOOKMARK', { id: bookmarkId });
   }
+
+  async updateBookmark(bookmarkId: string, request: any): Promise<void> {
+    return this.sendMessage<void>('UPDATE_BOOKMARK', {id: bookmarkId, ...request});
+  }
 }
 
 // 편의 함수들
@@ -46,3 +51,4 @@ export const getBookmarkData = () => BookmarkAPI.getInstance().getBookmarkData()
 export const getBookmarks = () => BookmarkAPI.getInstance().getBookmarks();
 export const saveBookmark = (bookmark: NativeBookmarkData) => BookmarkAPI.getInstance().saveBookmark(bookmark);
 export const removeBookmark = (bookmarkId: string) => BookmarkAPI.getInstance().removeBookmark(bookmarkId);
+export const updateBookmark = (bookmarkId: string, request: any) => BookmarkAPI.getInstance().updateBookmark(bookmarkId, request);
