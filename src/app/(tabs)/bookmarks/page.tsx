@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import {useMemo, useState} from 'react';
 import {
   Bookmark,
   Search,
@@ -12,13 +12,13 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import dayjs from "dayjs";
 import {useBookmarks} from "@/hooks/useBookmarks";
+import {showToast} from "@/components/ui/CustomToaster";
 
 export default function BookmarksPage() {
   const {
@@ -29,20 +29,24 @@ export default function BookmarksPage() {
     refreshBookmarks,
     addBookmark,
     deleteBookmark,
-    updateBookmark,
+    editBookmark,
     isBookmarked
   } = useBookmarks();
-  const [allTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(dayjs().year);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [displayBookmarks, setDisplayBookmarks] = useState(bookmarks);
+  const [editingNoteValue, setEditingNoteValue] = useState<string>('');
 
+  const tags = useMemo(() => {
+    const tagSet = new Set<string>();
+    bookmarks.forEach(bookmark => {
+      bookmark.tags?.forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet);
+  }, [bookmarks]);
 
-  const filteredBookmarks = displayBookmarks.filter(bookmark => {
-    // 태그가 선택되지 않았으면 모든 북마크 표시
+  const filteredBookmarks = bookmarks.filter(bookmark => {
     const tagMatch = selectedTags.length === 0 ||
         selectedTags.some(tag => bookmark.tags?.includes(tag));
 
@@ -61,36 +65,23 @@ export default function BookmarksPage() {
   };
 
   const handleDeleteBookmark = async (id: string) => {
-    // 1. 즉시 UI에서 제거 (낙관적 업데이트)
-    setDisplayBookmarks(prev => prev.filter(b => b.id !== id));
-
     try {
-      // 2. 백엔드에서 실제 삭제
       await deleteBookmark(id);
-    } catch (error) {
-      // 3. 실패시 UI 복원 + 사용자에게 알림
-      setDisplayBookmarks(bookmarks); // 원래 상태로 복원
-      alert('삭제에 실패했습니다. 다시 시도해주세요.');
+    } catch (e) {
+      showToast.error("삭제에 실패했습니다 😥");
     }
   };
 
   const handleUpdateNote = async (id: string, note: string) => {
-    // 1. 즉시 UI 업데이트
-    setDisplayBookmarks(prev => prev.map(b =>
-        b.id === id ? { ...b, note } : b
-    ));
     setEditingNote(null);
-
     try {
-      // 2. 백엔드 업데이트 (updateBookmark 함수가 훅에 있다면)
-      await updateBookmark(id, { note });
-    } catch (error) {
-      // 3. 실패시 복원
-      setDisplayBookmarks(bookmarks);
-      alert('저장에 실패했습니다.');
+      await editBookmark(id, { note });
+    } catch (e) {
+      showToast.error("저장에 실패했습니다 😥");
       setEditingNote(id); // 편집 모드 다시 활성화
     }
   };
+
   return (
     <div className="bg-background">
       {/* 상단 고정 헤더 + 필터 영역 */}
@@ -127,7 +118,7 @@ export default function BookmarksPage() {
                 <span className="text-sm font-semibold text-foreground">카테고리</span>
               </div>
               <div className="flex space-x-2 overflow-x-auto pb-2">
-                {allTags.map((tag) => (
+                {tags.map((tag) => (
                     <Button
                         key={tag}
                         onClick={() => toggleTag(tag)}
@@ -177,7 +168,7 @@ export default function BookmarksPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-primary">
-                        {bookmark.year}년 {bookmark.round}회차 {bookmark.number}번
+                        {bookmark.year}년 {bookmark.round}회차 {bookmark.questionNumber}번
                       </span>
                       <Bookmark className="h-5 w-4 text-yellow-400 pt-0.5 fill-yellow-400"/>
                     </div>
@@ -192,11 +183,11 @@ export default function BookmarksPage() {
                   </div>
 
                   <p className="text-sm text-foreground mb-3">
-                    Q. {bookmark.title}
+                    Q. {bookmark.questionText}
                   </p>
-                  {bookmark.answer && (
+                  {bookmark.explanation && (
                     <p className="text-sm text-zinc-600 mb-3">
-                    A. {bookmark.answer}
+                    A. {bookmark.explanation}
                     </p>
                   )}
 
@@ -205,12 +196,8 @@ export default function BookmarksPage() {
                     {editingNote === bookmark.id ? (
                         <div className="space-y-2">
                           <Textarea
-                              value={bookmark.note || ''}
-                              onChange={(e) => {
-                                setBookmarks(displayBookmarks.map(b =>
-                                    b.id === bookmark.id ? {...b, note: e.target.value} : b
-                                ));
-                              }}
+                              value={editingNoteValue}
+                              onChange={(e) => setEditingNoteValue(e.target.value)}
                               placeholder="노트를 입력하세요"
                               className="resize-none text-sm"
                               rows={2}
@@ -225,7 +212,7 @@ export default function BookmarksPage() {
                               <XIcon/>
                             </Button>
                             <Button
-                                onClick={() => handleUpdateNote(bookmark.id, bookmark.note || '')}
+                                onClick={() => handleUpdateNote(bookmark.id, editingNoteValue)}
                                 size="icon"
                                 className="w-8 h-8 text-green-500"
                             >
@@ -258,9 +245,18 @@ export default function BookmarksPage() {
 
                   {/* 하단 정보 */}
                   <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <Badge variant="outline" className="text-xs">
-                      {bookmark.category}
-                    </Badge>
+                    { bookmark.tags && bookmark.tags.length > 0 &&
+                        bookmark.tags.map(tag => (
+                            <Badge
+                                key={`${bookmark}-${tag}`}
+                                variant="outline"
+                                className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                        ))
+
+                    }
 
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3"/>

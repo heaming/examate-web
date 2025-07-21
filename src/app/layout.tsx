@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import FirebaseProvider from "@/components/FirebaseProvider";
+import {CustomToaster} from "@/components/ui/CustomToaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
         <FirebaseProvider>
           {children}
         </FirebaseProvider>
+        <CustomToaster />
       </body>
     </html>
   );

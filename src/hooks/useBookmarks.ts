@@ -69,18 +69,15 @@ export const useBookmarks = () => {
   }, [bookmarks]);
 
   // 북마크 업데이트
-  const updateBookmark = useCallback(async (bookmarkId: string, updates: Partial<NativeBookmarkData>) => {
-    // 1. 즉시 UI 업데이트
+  const editBookmark = useCallback(async (bookmarkId: string, updates: Partial<NativeBookmarkData>) => {
     const originalBookmarks = bookmarks;
     setBookmarks(prev => prev.map(b =>
         b.id === bookmarkId ? { ...b, ...updates } : b
     ));
 
     try {
-      // 2. 실제 업데이트
       await updateBookmark(bookmarkId, updates);
     } catch (err) {
-      // 3. 실패시 원복
       setBookmarks(originalBookmarks);
       setError('북마크 수정 실패');
       console.error('북마크 수정 실패:', err);
@@ -100,7 +97,7 @@ export const useBookmarks = () => {
     refreshBookmarks,
     addBookmark,
     deleteBookmark,
-    updateBookmark,
+    editBookmark,
     isBookmarked
   };
 }; 
