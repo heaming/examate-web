@@ -38,10 +38,10 @@ export const useBookmarks = () => {
   }, []);
 
   // 북마크 추가
-  const addBookmark = useCallback((bookmark: NativeBookmarkData) => {
+  const addBookmark = useCallback(async (bookmark: NativeBookmarkData) => {
     try {
       setBookmarks(prev => [bookmark, ...prev]);
-      saveBookmark(bookmark);
+      await saveBookmark(bookmark);
     } catch (err) {
       setError('북마크 저장 실패');
       console.error('북마크 저장 실패:', err);

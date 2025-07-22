@@ -22,6 +22,8 @@ import { toast } from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { useRoundQuestions, RoundQuestion } from '@/hooks/useRoundQuestions';
 import RoundQuestionsPageSkeleton from '@/components/RoundQuestionsPageSkeleton';
+import {useBookmarks} from "@/hooks/useBookmarks";
+import {NativeBookmarkData} from "@/lib/native";
 
 interface Question {
   id: string;
@@ -39,6 +41,14 @@ interface Question {
 
 export default function RoundQuestionsPage() {
   const params = useParams();
+  const { addBookmark, deleteBookmark, isBookmarked, bookmarks } = useBookmarks();
+  const {
+    questions,
+    loading,
+    error,
+    addBookmark,
+    removeBookmark
+  } = useRoundQuestions(year, round, 'korean_history');
   const year = params.year as string;
   const round = params.round as string;
   const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
@@ -46,7 +56,6 @@ export default function RoundQuestionsPage() {
   const [isGraded, setIsGraded] = useState(false);
   const [showAnswers, setShowAnswers] = useState<{ [key: number]: boolean }>({});
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [bookmarked, setBookmarked] = useState<{ [key: number]: boolean }>({});
 
   // Firebase에서 실제 문제 데이터 가져오기
   const { 
@@ -56,17 +65,15 @@ export default function RoundQuestionsPage() {
     meta 
   } = useRoundQuestions(year, round, 'korean_history');
 
-  // Firebase 데이터를 UI용 Question 형태로 변환
   const convertToUIQuestion = (roundQuestion: RoundQuestion): Question => {
-    // options 객체를 동그라미 번호와 함께 배열로 변환
     const optionsArray = [
       `① ${roundQuestion.options['1'] || ''}`,
       `② ${roundQuestion.options['2'] || ''}`,
       `③ ${roundQuestion.options['3'] || ''}`,
-      `④ ${roundQuestion.options['4'] || ''}`
+      `④ ${roundQuestion.options['4'] || ''}`,
+      `⑤ ${roundQuestion.options['5'] || ''}`,
     ];
 
-    // questionNumber에서 숫자 부분 추출 (예: "A-01" -> 1)
     const numberMatch = roundQuestion.questionNumber.match(/(\d+)$/);
     const questionNum = numberMatch ? parseInt(numberMatch[1]) : 1;
 
@@ -77,8 +84,8 @@ export default function RoundQuestionsPage() {
       title: roundQuestion.questionText,
       difficulty: roundQuestion.difficulty as 'easy' | 'medium' | 'hard',
       options: optionsArray,
-      correctAnswer: roundQuestion.correctAnswer - 1, // Firebase는 1-4, UI는 0-3
-      isSolved: false, // 초기값
+      correctAnswer: roundQuestion.correctAnswer - 1,
+      isSolved: false,
       isCorrect: undefined,
       userAnswer: undefined,
       timeSpent: undefined
@@ -196,12 +203,43 @@ export default function RoundQuestionsPage() {
     toast.success('저장되었습니다. 다음에 이어서 풀 수 있어요!');
   };
 
-  const handleBookmark = (questionNumber: number) => {
-    setBookmarked(prev => {
-      const newState = { ...prev, [questionNumber]: !prev[questionNumber] };
-      localStorage.setItem(`bookmarks-${year}-${round}`, JSON.stringify(newState));
-      return newState;
-    });
+  // const handleBookmark = async (questionId: string) => {
+  //   const question = questions.find(q => q.id === questionId);
+  //   if (!question) return;
+  //
+  //   if (isBookmarked(questionId)) {
+  //     await deleteBookmark(questionId);
+  //   } else {
+  //     const request = {
+  //       questionId: questionId,
+  //       year: question.year,
+  //       round: question.round,
+  //       questionNumber: question.questionNumber,
+  //       questionText: question.questionText,
+  //       questionImageUrl: question.questionImageUrl || '',
+  //       correctAnswer: question.correctAnswer,
+  //       explanation: question.explanation || '',
+  //       tags: question.tags || null
+  //     }
+  //     await addBookmark(request);
+  //   }
+  // };
+
+  const handleBookmark = async (questionId: string) => {
+    try {
+      const question = questions.find(q => q.id === questionId);
+      if (!question) return;
+
+      if (question.isBookmarked) {
+        await removeBookmark(questionId);
+        toast.success('북마크가 삭제되었습니다');
+      } else {
+        await addBookmark(question);
+        toast.success('북마크가 추가되었습니다');
+      }
+    } catch (error) {
+      toast.error('북마크 처리 중 오류가 발생했습니다');
+    }
   };
 
   if (isLoading) {
@@ -312,28 +350,28 @@ export default function RoundQuestionsPage() {
                       {question.number}번
                     </span>
                     {isGraded && (
-                      <Badge className={`${
-                        !question.isSolved 
-                          ? "bg-black text-white" 
-                          : question.isCorrect 
-                            ? "text-green-500" 
-                            : "text-rose-400"
-                      } text-xs`}>
-                        {!question.isSolved ? '미풀이' : question.isCorrect ? '정답' : '오답'}
-                      </Badge>
+                        <Badge className={`${
+                            !question.isSolved
+                                ? "bg-black text-white"
+                                : question.isCorrect
+                                    ? "text-green-500"
+                                    : "text-rose-400"
+                        } text-xs`}>
+                          {!question.isSolved ? '미풀이' : question.isCorrect ? '정답' : '오답'}
+                        </Badge>
                     )}
                   </div>
                 </div>
                 {/* 북마크 버튼 */}
                 <button
-                  onClick={() => handleBookmark(question.number)}
-                  className="ml-2 rounded-full hover:bg-yellow-100 transition-colors"
-                  aria-label="북마크"
+                    onClick={() => handleBookmark(question.questionNumber)}
+                    className="ml-2 rounded-full hover:bg-yellow-100 transition-colors"
+                    aria-label="북마크"
                 >
-                  {bookmarked[question.number] ? (
-                    <BookmarkFilled className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  {isBookmarked(question.id) ? (
+                      <BookmarkFilled className="h-5 w-5 text-yellow-400 fill-yellow-400"/>
                   ) : (
-                    <Bookmark className="h-5 w-5 text-zinc-300" />
+                      <Bookmark className="h-5 w-5 text-zinc-300"/>
                   )}
                 </button>
               </div>
@@ -396,7 +434,7 @@ export default function RoundQuestionsPage() {
                     <div className="mb-3">
                       <h4 className="text-sm font-semibold text-blue-800 mb-2">정답</h4>
                       <div className="text-sm text-blue-900 font-semibold">
-                        {['①', '②', '③', '④'][question.correctAnswer]}
+                        {['①', '②', '③', '④', '⑤'][question.correctAnswer]}
                       </div>
                     </div>
                     <div>
@@ -425,7 +463,6 @@ export default function RoundQuestionsPage() {
                     setUserAnswers({});
                     setIsGraded(false);
                     setShowAnswers({});
-                    // questions 상태도 초기화
                     setQuestions(prev => prev.map(question => ({
                       ...question,
                       isSolved: false,

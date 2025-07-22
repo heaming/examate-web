@@ -1,7 +1,7 @@
 import { NativeAPIBase } from './base';
 
 export interface NativeBookmarkData {
-  id: string;
+  id?: string;
   questionId: string;
   year: number;
   round: number;
@@ -12,7 +12,7 @@ export interface NativeBookmarkData {
   explanation?: string;
   note?: string;
   tags?: string[];
-  bookmarkedAt: string;
+  bookmarkedAt?: string;
 }
 
 export class BookmarkAPI extends NativeAPIBase {
