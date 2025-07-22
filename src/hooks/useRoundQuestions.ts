@@ -17,15 +17,15 @@ export interface RoundQuestion {
   tags: string[];
   questionImageUrl?: string;
   testAt: string;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // 북마크 정보가 포함된 확장된 Question 인터페이스
-export interface EnhancedRoundQuestion extends RoundQuestion {
+export interface RoundQuestionPageData extends RoundQuestion {
   isBookmarked: boolean;
-  formattedOptions: string[]; // 포맷팅된 옵션 배열
-  questionNumberInt: number; // 숫자형 문제 번호
+  formattedOptions: string[]; // 포맷팅된 옵션
+  bookmarkId?: number;
 }
 
 export interface RoundQuestionsResponse {
@@ -42,20 +42,22 @@ export interface RoundQuestionsResponse {
 }
 
 export const useRoundQuestions = (
-    year: number | string,
-    round: number | string,
+    year: number,
+    round: number,
     examType: string = 'korean_history'
 ) => {
-  const [questions, setQuestions] = useState<EnhancedRoundQuestion[]>([]);
+  const [questions, setQuestions] = useState<RoundQuestionPageData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [meta, setMeta] = useState<RoundQuestionsResponse['meta'] | null>(null);
+  const [bookmarkedData, setBookmarkedData] = useState<{bookmarkId: number, questionId: string}[]>([]);
 
-  // 북마크 훅 사용
-  const { isBookmarked, addBookmark, deleteBookmark, loading: bookmarkLoading } = useBookmarks();
+  const { addBookmark, deleteBookmark, findBookmarkByYearRound, loading: bookmarkLoading } = useBookmarks();
 
-  // 문제 데이터 가공 함수
-  const enhanceQuestions = useCallback((rawQuestions: RoundQuestion[]): EnhancedRoundQuestion[] => {
+  const loadRoundQuestionsData = useCallback((
+      rawQuestions: RoundQuestion[],
+      bookmarkData: {bookmarkId: number, questionId: string}[]
+  ): RoundQuestionPageData[] => {
     return rawQuestions.map(question => {
       // 문제 번호를 숫자로 변환
       const numberMatch = question.questionNumber.match(/(\d+)$/);
@@ -66,14 +68,30 @@ export const useRoundQuestions = (
           .sort(([a], [b]) => parseInt(a) - parseInt(b))
           .map(([num, text]) => `${['①', '②', '③', '④', '⑤'][parseInt(num)-1]} ${text}`);
 
+      // 해당 문제의 북마크 정보 찾기
+      const bookmarkInfo = bookmarkData.find(bookmark => bookmark.questionId === question.id);
+
       return {
         ...question,
-        isBookmarked: isBookmarked(question.id),
+        isBookmarked: !!bookmarkInfo,
+        bookmarkId: bookmarkInfo?.bookmarkId,
         formattedOptions,
         questionNumberInt
       };
     });
-  }, [isBookmarked]);
+  }, []);
+
+  const loadBookmarkData = useCallback(async () => {
+    if (!year || !round) return [];
+
+    try {
+      const bookmarkData = await findBookmarkByYearRound(year, round);
+      return bookmarkData || [];
+    } catch (error) {
+      console.error('북마크 데이터 로드 실패:', error);
+      return [];
+    }
+  }, [year, round, findBookmarkByYearRound]);
 
   // 문제 데이터 fetch
   const fetchQuestions = async () => {
@@ -83,19 +101,22 @@ export const useRoundQuestions = (
     setError(null);
 
     try {
-      const response = await fetch(
-          `/api/questions/${year}/${round}?examType=${examType}`
-      );
+      // 병렬로 문제 데이터와 북마크 데이터를 가져오기
+      const [questionsResponse, bookmarkData] = await Promise.all([
+        fetch(`/api/questions/${year}/${round}?examType=${examType}`),
+        loadBookmarkData()
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!questionsResponse.ok) {
+        throw new Error(`HTTP error! status: ${questionsResponse.status}`);
       }
 
-      const data: RoundQuestionsResponse = await response.json();
+      const data: RoundQuestionsResponse = await questionsResponse.json();
 
       if (data.success) {
-        const enhancedData = enhanceQuestions(data.data);
-        setQuestions(enhancedData);
+        setBookmarkedData(bookmarkData);
+        const roundQuestionPageData = loadRoundQuestionsData(data.data, bookmarkData);
+        setQuestions(roundQuestionPageData);
         setMeta(data.meta || null);
       } else {
         throw new Error(data.error || '문제를 가져오는데 실패했습니다.');
@@ -110,29 +131,32 @@ export const useRoundQuestions = (
   };
 
   // 북마크 추가 함수
-  const handleAddBookmark = async (question: EnhancedRoundQuestion) => {
+  const handleAddBookmark = async (question: RoundQuestionPageData) => {
     try {
       const bookmarkData: NativeBookmarkData = {
-        id: `${year}-${round}-${question.questionNumberInt}`,
         questionId: question.id,
-        year: typeof year === 'string' ? parseInt(year) : year,
-        round: typeof round === 'string' ? parseInt(round) : round,
-        questionNumber: question.questionNumberInt,
+        year,
+        round,
+        questionNumber: question.questionNumber,
         questionText: question.questionText,
         questionImageUrl: question.questionImageUrl || '',
         correctAnswer: question.correctAnswer,
         explanation: question.explanation || '',
-        tags: question.tags || [],
-        createdAt: new Date().toISOString()
+        tags: question.tags || []
       };
 
-      await addBookmark(bookmarkData);
+      const savedBookmark = await addBookmark(bookmarkData);
+      const newBookmarkInfo = {
+        bookmarkId: savedBookmark?.id || Date.now(), // fallback ID
+        questionId: question.id
+      };
+      const newBookmarkedData = [...bookmarkedData, newBookmarkInfo];
+      setBookmarkedData(newBookmarkedData);
 
-      // 로컬 상태 업데이트
       setQuestions(prev =>
           prev.map(q =>
               q.id === question.id
-                  ? { ...q, isBookmarked: true }
+                  ? { ...q, isBookmarked: true, bookmarkId: newBookmarkInfo.bookmarkId }
                   : q
           )
       );
@@ -141,19 +165,17 @@ export const useRoundQuestions = (
     }
   };
 
-  // 북마크 제거 함수
-  const handleRemoveBookmark = async (questionId: string) => {
+  const handleRemoveBookmark = async (bookmarkId: number) => {
     try {
-      const question = questions.find(q => q.id === questionId);
-      if (!question) return;
+      await deleteBookmark(bookmarkId);
 
-      await deleteBookmark(`${year}-${round}-${question.questionNumberInt}`);
+      const newBookmarkedData = bookmarkedData.filter(bookmark => bookmark.bookmarkId !== bookmarkId);
+      setBookmarkedData(newBookmarkedData);
 
-      // 로컬 상태 업데이트
       setQuestions(prev =>
           prev.map(q =>
-              q.id === questionId
-                  ? { ...q, isBookmarked: false }
+              q.bookmarkId === bookmarkId
+                  ? { ...q, isBookmarked: false, bookmarkId: undefined }
                   : q
           )
       );
@@ -166,14 +188,6 @@ export const useRoundQuestions = (
     fetchQuestions();
   }, [year, round, examType]);
 
-  // 북마크 상태가 변경될 때마다 문제 데이터 업데이트
-  useEffect(() => {
-    if (questions.length > 0) {
-      const updatedQuestions = enhanceQuestions(questions);
-      setQuestions(updatedQuestions);
-    }
-  }, [isBookmarked]);
-
   return {
     questions,
     loading: loading || bookmarkLoading,
@@ -181,6 +195,7 @@ export const useRoundQuestions = (
     meta,
     refetch: fetchQuestions,
     addBookmark: handleAddBookmark,
-    removeBookmark: handleRemoveBookmark
+    removeBookmark: handleRemoveBookmark,
+    loadRoundQuestionsData // 외부에서 사용할 수 있도록 export
   };
 };

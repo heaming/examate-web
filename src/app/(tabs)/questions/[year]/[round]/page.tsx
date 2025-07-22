@@ -41,7 +41,14 @@ interface Question {
 
 export default function RoundQuestionsPage() {
   const params = useParams();
-  const { addBookmark, deleteBookmark, isBookmarked, bookmarks } = useBookmarks();
+  const year = Number(params.year);
+  const round = Number(params.round);
+  const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
+  const [isGraded, setIsGraded] = useState(false);
+  const [showAnswers, setShowAnswers] = useState<{ [key: number]: boolean }>({});
+  const [questions, setQuestions] = useState<Question[]>([]);
+
   const {
     questions,
     loading,
@@ -49,13 +56,8 @@ export default function RoundQuestionsPage() {
     addBookmark,
     removeBookmark
   } = useRoundQuestions(year, round, 'korean_history');
-  const year = params.year as string;
-  const round = params.round as string;
-  const [selectedQuestion, setSelectedQuestion] = useState<number | null>(null);
-  const [userAnswers, setUserAnswers] = useState<{ [key: number]: number }>({});
-  const [isGraded, setIsGraded] = useState(false);
-  const [showAnswers, setShowAnswers] = useState<{ [key: number]: boolean }>({});
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const { addBookmark, deleteBookmark, isBookmarked, bookmarks } = useBookmarks();
+
 
   // Firebase에서 실제 문제 데이터 가져오기
   const { 

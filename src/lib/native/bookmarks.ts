@@ -1,7 +1,7 @@
 import { NativeAPIBase } from './base';
 
 export interface NativeBookmarkData {
-  id?: string;
+  id?: number;
   questionId: string;
   year: number;
   round: number;
@@ -33,15 +33,19 @@ export class BookmarkAPI extends NativeAPIBase {
     return this.sendMessage<NativeBookmarkData[]>('GET_BOOKMARKS');
   }
 
-  async saveBookmark(bookmark: NativeBookmarkData): Promise<void> {
-    return this.sendMessage<void>('SAVE_BOOKMARK', bookmark);
+  async getBookmarksByYearRound(year: number, round: number): Promise<{bookmarkId: number, questionId: string}[]> {
+    return this.sendMessage<{bookmarkId: number, questionId: string}[]>('GET_BOOKMARKS_BY_YEAR_ROUND', {year: year, round: round} );
   }
 
-  async removeBookmark(bookmarkId: string): Promise<void> {
+  async saveBookmark(bookmark: NativeBookmarkData): Promise<NativeBookmarkData> {
+    return this.sendMessage<NativeBookmarkData>('SAVE_BOOKMARK', bookmark);
+  }
+
+  async removeBookmark(bookmarkId: number): Promise<void> {
     return this.sendMessage<void>('REMOVE_BOOKMARK', { id: bookmarkId });
   }
 
-  async updateBookmark(bookmarkId: string, request: any): Promise<void> {
+  async updateBookmark(bookmarkId: number, request: any): Promise<void> {
     return this.sendMessage<void>('UPDATE_BOOKMARK', {id: bookmarkId, ...request});
   }
 }
@@ -50,5 +54,6 @@ export class BookmarkAPI extends NativeAPIBase {
 export const getBookmarkData = () => BookmarkAPI.getInstance().getBookmarkData();
 export const getBookmarks = () => BookmarkAPI.getInstance().getBookmarks();
 export const saveBookmark = (bookmark: NativeBookmarkData) => BookmarkAPI.getInstance().saveBookmark(bookmark);
-export const removeBookmark = (bookmarkId: string) => BookmarkAPI.getInstance().removeBookmark(bookmarkId);
-export const updateBookmark = (bookmarkId: string, request: any) => BookmarkAPI.getInstance().updateBookmark(bookmarkId, request);
+export const removeBookmark = (bookmarkId: number) => BookmarkAPI.getInstance().removeBookmark(bookmarkId);
+export const updateBookmark = (bookmarkId: number, request: any) => BookmarkAPI.getInstance().updateBookmark(bookmarkId, request);
+export const getBookmarksByYearRound = (year: number, round: number) => BookmarkAPI.getInstance().getBookmarksByYearRound(year, round);

@@ -3,7 +3,7 @@ import {
   saveBookmark,
   removeBookmark,
   NativeBookmarkData,
-  getBookmarkData, updateBookmark
+  getBookmarkData, updateBookmark, getBookmarksByYearRound
 } from '@/lib/native';
 
 export const useBookmarks = () => {
@@ -41,7 +41,7 @@ export const useBookmarks = () => {
   const addBookmark = useCallback(async (bookmark: NativeBookmarkData) => {
     try {
       setBookmarks(prev => [bookmark, ...prev]);
-      await saveBookmark(bookmark);
+      return await saveBookmark(bookmark);
     } catch (err) {
       setError('북마크 저장 실패');
       console.error('북마크 저장 실패:', err);
@@ -49,7 +49,7 @@ export const useBookmarks = () => {
   }, []);
 
   // 북마크 삭제
-  const deleteBookmark = useCallback(async (bookmarkId: string) => {
+  const deleteBookmark = useCallback(async (bookmarkId: number) => {
     const originalBookmarks = bookmarks;
     setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
 
@@ -69,7 +69,7 @@ export const useBookmarks = () => {
   }, [bookmarks]);
 
   // 북마크 업데이트
-  const editBookmark = useCallback(async (bookmarkId: string, updates: Partial<NativeBookmarkData>) => {
+  const editBookmark = useCallback(async (bookmarkId: number, updates: Partial<NativeBookmarkData>) => {
     const originalBookmarks = bookmarks;
     setBookmarks(prev => prev.map(b =>
         b.id === bookmarkId ? { ...b, ...updates } : b
@@ -85,6 +85,16 @@ export const useBookmarks = () => {
     }
   }, [bookmarks]);
 
+  // 북마크 된 문제 아이디 리스트
+  const findBookmarkByYearRound = useCallback(async (year: number, round: number) => {
+    try {
+      return await getBookmarksByYearRound(year, round);
+    } catch (err) {
+      setError('북마크 조회 실패');
+      console.error('북마크 조회 실패:', err);
+    }
+  }, [])
+
   useEffect(() => {
     loadBookmarkData();
   }, [loadBookmarkData]);
@@ -98,6 +108,7 @@ export const useBookmarks = () => {
     addBookmark,
     deleteBookmark,
     editBookmark,
-    isBookmarked
+    isBookmarked,
+    findBookmarkByYearRound
   };
 }; 
