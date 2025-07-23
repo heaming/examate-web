@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {Question, RecentQuestion} from "@/types/question";
 import {getQuestionsByIds, getTotalQuestionsCount} from "@/lib/firebase/questions";
-import {StudyHistory} from "@/types/studyHistory";
+import {StudyHistory} from '@/lib/native'
 import {getHomeData, NativeHomePageData} from "@/lib/native";
 
 export interface HomePageData {

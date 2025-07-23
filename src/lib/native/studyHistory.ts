@@ -1,29 +1,35 @@
-import { sendMessageToNative } from './common';
+import {NativeAPIBase} from "@/lib/native/base";
 
-export interface ExamResult {
-  id: string;
+export interface StudyHistory {
+  id: number;
   year: number;
   round: number;
-  category: string;
-  totalQuestions: number;
-  correctAnswers: number;
-  totalTime: number;          // 시험 시간 (분)
-  completedAt: string;        // ISO string
-  score: number;              // 점수
-  passed: boolean;            // 합격 여부
+  questionId: string;
+  solvedAt?: string;
+  isCorrect?: boolean | null;
+  userAnswer?: number | null;
+  correctAnswer: number;
+  createdAt: string;
 }
 
-// 시험 결과 저장
-export const saveStudyHistories = (examData: ExamResult): void => {
-  sendMessageToNative({
-    type: 'SAVE_EXAM_RESULT',
-    data: examData
-  });
-};
+export class StudyHistoryAPI extends NativeAPIBase {
+  private static instance: StudyHistoryAPI;
 
-// 시험 결과 목록 요청
-export const requestExamResults = (): void => {
-  sendMessageToNative({
-    type: 'GET_EXAM_RESULTS'
-  });
-}; 
+  static getInstance() {
+    if (!this.instance) {
+      this.instance = new StudyHistoryAPI();
+    }
+    return this.instance;
+  }
+
+  async saveStudyHistories(data: StudyHistory[]): Promise<StudyHistory[]> {
+    return this.sendMessage<StudyHistory[]>('SAVE_STUDY_HISTORIES', data);
+  }
+
+  async getStudyHistories(year: number, round: number): Promise<StudyHistory[]> {
+    return this.sendMessage<StudyHistory[]>('GET_STUDY_HISTORIES', {year, round});
+  }
+}
+
+export const getStudyHistories = (year: number, round: number) => StudyHistoryAPI.getInstance().getStudyHistories(year, round);
+export const saveStudyHistories = (request: StudyHistory[]) => StudyHistoryAPI.getInstance().saveStudyHistories(request);

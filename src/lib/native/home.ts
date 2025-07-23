@@ -1,5 +1,5 @@
 import { NativeAPIBase } from './base';
-import { StudyHistory } from "@/types/studyHistory";
+import { StudyHistory } from '@/lib/native';
 
 export interface NativeHomePageData {
   totalSolved: number;

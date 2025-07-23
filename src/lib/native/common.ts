@@ -5,17 +5,23 @@ export interface NativeMessage {
     // HOME
     | 'GET_HOME_PAGE_DATA'
 
-    // 북마크 관련
-    | 'SAVE_BOOKMARK' 
-    | 'REMOVE_BOOKMARK' 
-    | 'GET_BOOKMARKS' 
-    // 학습 통계 관련
+    // BOOKMARK
+    | 'GET_BOOKMARK_DATA'
+    | 'GET_BOOKMARKS'
+    | 'SAVE_BOOKMARK'
+    | 'REMOVE_BOOKMARK'
+    | 'GET_BOOKMARKS_BY_YEAR_ROUND'
+
+    // STUDY HISTORY
+    | 'GET_STUDY_HISTORIES'
+    | 'SAVE_STUDY_HISTORIES'
+    | 'SAVE_STUDY_HISTORY'
+
+    // STUDY STATS
     | 'GET_STUDY_STATS'
     | 'UPDATE_STUDY_STATS'
     | 'GET_TODAY_STATS'
-    // 최근 문제 관련
-    | 'GET_RECENT_QUESTIONS'
-    | 'SAVE_QUESTION_RESULT'
+
     // 오답노트 관련
     | 'SAVE_WRONG_ANSWER'
     | 'GET_WRONG_ANSWERS'
@@ -23,19 +29,7 @@ export interface NativeMessage {
     | 'UPDATE_WRONG_ANSWER_NOTE'
     | 'TOGGLE_WRONG_ANSWER_BOOKMARK'
     | 'REMOVE_WRONG_ANSWER'
-    // 시험 결과 관련
-    | 'GET_EXAM_RESULTS' 
-    | 'SAVE_EXAM_RESULT'
-    
-    // 응답 타입들
-    | 'HOME_PAGE_DATA_RESPONSE'
-    | 'BOOKMARKS_RESPONSE'
-    | 'STUDY_STATS_RESPONSE'
-    | 'TODAY_STATS_RESPONSE'
-    | 'RECENT_QUESTIONS_RESPONSE'
-    | 'WRONG_ANSWERS_RESPONSE'
-    | 'WRONG_ANSWER_STATS_RESPONSE'
-    | 'EXAM_RESULTS_RESPONSE';
+
   data?: any;
 }
 

@@ -49,23 +49,28 @@ export default function RoundQuestionsPage() {
   const [showAnswers, setShowAnswers] = useState<{ [key: number]: boolean }>({});
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  const {
-    questions,
-    loading,
-    error,
-    addBookmark,
-    removeBookmark
-  } = useRoundQuestions(year, round, 'korean_history');
   const { addBookmark, deleteBookmark, isBookmarked, bookmarks } = useBookmarks();
-
-
-  // Firebase에서 실제 문제 데이터 가져오기
-  const { 
-    questions: roundQuestions, 
-    loading: isLoading, 
+  const {
+    questions: roundQuestions,
+    loading: isLoading,
     error: loadingError,
-    meta 
+    meta,
+    saveStudyHistory,
+    extractUserAnswers
   } = useRoundQuestions(year, round, 'korean_history');
+
+  useEffect(() => {
+    if (roundQuestions.length > 0) {
+      const convertedQuestions = roundQuestions.map(convertToUIQuestion);
+      setQuestions(convertedQuestions);
+
+      // 저장된 답안 자동 추출
+      const savedAnswers = extractUserAnswers();
+      if (Object.keys(savedAnswers).length > 0) {
+        setUserAnswers(savedAnswers);
+      }
+    }
+  }, [roundQuestions, extractUserAnswers]);
 
   const convertToUIQuestion = (roundQuestion: RoundQuestion): Question => {
     const optionsArray = [
@@ -86,7 +91,7 @@ export default function RoundQuestionsPage() {
       title: roundQuestion.questionText,
       difficulty: roundQuestion.difficulty as 'easy' | 'medium' | 'hard',
       options: optionsArray,
-      correctAnswer: roundQuestion.correctAnswer - 1,
+      correctAnswer: roundQuestion.correctAnswer,
       isSolved: false,
       isCorrect: undefined,
       userAnswer: undefined,
