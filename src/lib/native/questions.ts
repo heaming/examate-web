@@ -1,5 +1,3 @@
-// 최근 문제 관련 Native 통신
-
 import { sendMessageToNative } from './common';
 
 export interface RecentQuestionData {
@@ -13,8 +11,8 @@ export interface RecentQuestionData {
   userAnswer?: string;
   correctAnswer: string;
   isCorrect: boolean;
-  solvedAt: string;           // ISO string
-  studyTime: number;          // 문제 풀이 시간 (초)
+  solvedAt: string;
+  studyTime: number;
 }
 
 export interface QuestionResult {
@@ -22,12 +20,12 @@ export interface QuestionResult {
   userAnswer: string;
   correctAnswer: string;
   isCorrect: boolean;
-  studyTime: number;          // 문제 풀이 시간 (초)
+  studyTime: number;
   category: string;
   year: number;
   round: number;
   number: number;
-  solvedAt: string;           // ISO string
+  solvedAt: string;
 }
 
 // 최근 문제 목록 요청

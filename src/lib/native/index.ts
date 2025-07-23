@@ -19,4 +19,4 @@ export * from './questions';
 export * from './wrongAnswers';
 
 // 시험 결과
-export * from './exams';
+export * from './studyHistory';

@@ -1,5 +1,3 @@
-// 시험 결과 관련 Native 통신
-
 import { sendMessageToNative } from './common';
 
 export interface ExamResult {
@@ -16,7 +14,7 @@ export interface ExamResult {
 }
 
 // 시험 결과 저장
-export const saveExamResult = (examData: ExamResult): void => {
+export const saveStudyHistories = (examData: ExamResult): void => {
   sendMessageToNative({
     type: 'SAVE_EXAM_RESULT',
     data: examData

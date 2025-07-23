@@ -227,14 +227,13 @@ export default function RoundQuestionsPage() {
   //   }
   // };
 
-  const handleBookmark = async (questionId: string) => {
+  const handleBookmark = async (question: RoundQuestionPageData) => {
     try {
-      const question = questions.find(q => q.id === questionId);
-      if (!question) return;
-
       if (question.isBookmarked) {
-        await removeBookmark(questionId);
-        toast.success('북마크가 삭제되었습니다');
+        if (question.bookmarkId) {
+          await removeBookmark(question.bookmarkId);
+          toast.success('북마크가 삭제되었습니다');
+        }
       } else {
         await addBookmark(question);
         toast.success('북마크가 추가되었습니다');
