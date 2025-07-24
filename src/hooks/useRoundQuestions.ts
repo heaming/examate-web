@@ -147,7 +147,6 @@ export const useRoundQuestions = (
     setError(null);
 
     try {
-      // 병렬로 모든 데이터 로드
       const [rawQuestions, bookmarkData, studyHistoryData] = await Promise.all([
         loadQuestionsData(),
         loadBookmarkData(),
@@ -155,10 +154,9 @@ export const useRoundQuestions = (
       ]);
 
       // 데이터 결합
-      const combinedQuestions = convertToRoundQuestionPageData(rawQuestions, bookmarkData, studyHistoryData);
-      setQuestions(combinedQuestions);
+      const convertedQuestions = convertToRoundQuestionPageData(rawQuestions, bookmarkData, studyHistoryData);
+      setQuestions(convertedQuestions);
 
-      // 메타 정보 설정
       setMeta({
         year,
         round,
@@ -187,7 +185,6 @@ export const useRoundQuestions = (
 
     const originalStudyHistories = studyHistories;
 
-    // 낙관적 업데이트
     const newStudyHistories = [...studyHistories];
     histories.forEach(history => {
       const existingIndex = newStudyHistories.findIndex(h => h.questionId === history.questionId);
@@ -199,7 +196,6 @@ export const useRoundQuestions = (
     });
     setStudyHistories(newStudyHistories);
 
-    // questions 상태도 낙관적 업데이트
     setQuestions(prev => prev.map(question => {
       const updatedHistory = histories.find(h => h.questionId === question.id);
       if (updatedHistory) {
@@ -216,8 +212,6 @@ export const useRoundQuestions = (
 
     try {
       const savedHistories = await saveStudyHistories(histories);
-
-      // 서버 응답으로 최종 업데이트
       setStudyHistories(prev => {
         const updated = [...prev];
         savedHistories.forEach(saved => {
@@ -230,32 +224,31 @@ export const useRoundQuestions = (
       });
 
     } catch (err) {
-      // 실패 시 롤백
       setStudyHistories(originalStudyHistories);
       setError('학습 이력 저장 실패');
       console.error('학습 이력 저장 실패:', err);
       throw err;
     }
-  }, [studyHistories]);
+  }, []);
 
   // 특정 문제의 학습 이력 조회
   const getHistoryByQuestionId = useCallback((questionId: string) => {
     return studyHistories.find(history => history.questionId === questionId);
-  }, [studyHistories]);
+  }, []);
 
   // 사용자 답안 추출 (page.tsx에서 사용하기 쉽게)
   const extractUserAnswers = useCallback(() => {
     const userAnswers: { [key: number]: number } = {};
-    questions.forEach(question => {
-      const numberMatch = question.questionNumber.match(/(\d+)$/);
-      const questionNum = numberMatch ? parseInt(numberMatch[1]) : 1;
-
-      if (question.userAnswer !== null && question.userAnswer !== undefined) {
-        userAnswers[questionNum] = question.userAnswer;
+    studyHistories.forEach(history => {
+      const questionData = questions.find(q => q.id === history.questionId);
+      if (questionData && history.userAnswer !== null) {
+        const numberMatch = questionData.questionNumber.match(/(\d+)$/);
+        const questionNum = numberMatch ? parseInt(numberMatch[1]) : 1;
+        userAnswers[questionNum] = history.userAnswer;
       }
     });
     return userAnswers;
-  }, [questions]);
+  }, [studyHistories]);
 
   useEffect(() => {
     loadRoundQuestionsData();
