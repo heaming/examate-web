@@ -1,7 +1,7 @@
 import {NativeAPIBase} from "@/lib/native/base";
 
 export interface StudyHistory {
-  id: number;
+  id?: number | null;
   year: number;
   round: number;
   questionId: string;
@@ -9,7 +9,7 @@ export interface StudyHistory {
   isCorrect?: boolean | null;
   userAnswer?: number | null;
   correctAnswer: number;
-  createdAt: string;
+  createdAt?: string | null;
 }
 
 export class StudyHistoryAPI extends NativeAPIBase {
