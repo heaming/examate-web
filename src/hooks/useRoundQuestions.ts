@@ -236,7 +236,7 @@ export const useRoundQuestions = (
     return studyHistories.find(history => history.questionId === questionId);
   }, []);
 
-  // 사용자 답안 추출 (page.tsx에서 사용하기 쉽게)
+  // 사용자 답안 추출
   const extractUserAnswers = useCallback(() => {
     const userAnswers: { [key: number]: number } = {};
     studyHistories.forEach(history => {
@@ -244,7 +244,9 @@ export const useRoundQuestions = (
       if (questionData && history.userAnswer !== null) {
         const numberMatch = questionData.questionNumber.match(/(\d+)$/);
         const questionNum = numberMatch ? parseInt(numberMatch[1]) : 1;
-        userAnswers[questionNum] = history.userAnswer;
+        if (history.userAnswer != null) {
+          userAnswers[questionNum] = history.userAnswer;
+        }
       }
     });
     return userAnswers;

@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 interface RoundQuestionsPageSkeletonProps {
-  year: string;
-  round: string;
+  year?: number;
+  round?: number;
 }
 
 export default function RoundQuestionsPageSkeleton({ year, round }: RoundQuestionsPageSkeletonProps) {

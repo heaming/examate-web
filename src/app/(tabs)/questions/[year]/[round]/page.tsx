@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
-  BookOpen,
-  Clock,
   CheckCircle,
   Circle,
   RotateCcw,
   Eye,
-  X, ArrowRight, CircleX, Save, Bookmark, Bookmark as BookmarkFilled
+  X,Save, Bookmark, Bookmark as BookmarkFilled
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,25 +18,11 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
-import {useRoundQuestions, RoundQuestion, RoundQuestionPageData} from '@/hooks/useRoundQuestions';
-import RoundQuestionsPageSkeleton from '@/components/RoundQuestionsPageSkeleton';
+import {useRoundQuestions, RoundQuestionPageData} from '@/hooks/useRoundQuestions';
 import {useBookmarks} from "@/hooks/useBookmarks";
-import {removeBookmark, StudyHistory} from "@/lib/native";
+import {StudyHistory} from "@/lib/native";
 import dayjs from "dayjs";
-
-interface Question {
-  id: string;
-  number: number;
-  category: string;
-  title: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  options: string[];
-  correctAnswer: number;
-  isSolved: boolean;
-  isCorrect?: boolean;
-  userAnswer?: number;
-  timeSpent?: number; // 분 단위
-}
+import RoundQuestionsPageSkeleton from "@/components/skeleton/RoundQuestionsPageSkeleton";
 
 export default function RoundQuestionsPage() {
   const params = useParams();
@@ -55,7 +39,6 @@ export default function RoundQuestionsPage() {
     questions: roundQuestions,
     loading: isLoading,
     error: loadingError,
-    meta,
     saveStudyHistory
   } = useRoundQuestions(year, round, 'korean_history');
 
@@ -63,55 +46,6 @@ export default function RoundQuestionsPage() {
     const numberMatch = questionNumber.match(/(\d+)$/);
     return numberMatch ? parseInt(numberMatch[1]) : 1;
   };
-
-  // const convertToUIQuestion = (roundQuestion: RoundQuestion): Question => {
-  //   const optionsArray = [
-  //     `① ${roundQuestion.options['1'] || ''}`,
-  //     `② ${roundQuestion.options['2'] || ''}`,
-  //     `③ ${roundQuestion.options['3'] || ''}`,
-  //     `④ ${roundQuestion.options['4'] || ''}`,
-  //     `⑤ ${roundQuestion.options['5'] || ''}`,
-  //   ];
-  //
-  //   const numberMatch = roundQuestion.questionNumber.match(/(\d+)$/);
-  //   const questionNum = numberMatch ? parseInt(numberMatch[1]) : 1;
-  //
-  //   return {
-  //     id: roundQuestion.id,
-  //     number: questionNum,
-  //     category: roundQuestion.subject,
-  //     title: roundQuestion.questionText,
-  //     difficulty: roundQuestion.difficulty as 'easy' | 'medium' | 'hard',
-  //     options: optionsArray,
-  //     correctAnswer: roundQuestion.correctAnswer,
-  //     isSolved: false,
-  //     isCorrect: undefined,
-  //     userAnswer: undefined,
-  //     timeSpent: undefined
-  //   };
-  // };
-
-  // useEffect(() => {
-  //   if (roundQuestions.length > 0) {
-  //     const convertedQuestions = roundQuestions.map(convertToUIQuestion);
-  //     setQuestions(convertedQuestions);
-  //   }
-  // }, [roundQuestions]);
-  //
-  // useEffect(() => {
-  //   if (year && round) {
-  //     // 저장된 답안 불러오기
-  //     const saved = localStorage.getItem(`answers-${year}-${round}`);
-  //     if (saved) {
-  //       setUserAnswers(JSON.parse(saved));
-  //     }
-  //     // 저장된 북마크 불러오기
-  //     const bm = localStorage.getItem(`bookmarks-${year}-${round}`);
-  //     if (bm) {
-  //       setBookmarked(JSON.parse(bm));
-  //     }
-  //   }
-  // }, [year, round]);
 
   const solvedQuestions = roundQuestions.filter(q => q.isCorrect !== null);
   const correctAnswers = roundQuestions.filter(q => q.isCorrect === true);
@@ -136,20 +70,20 @@ export default function RoundQuestionsPage() {
     }
   };
 
-  const getStatusIcon = (question: Question) => {
+  const getStatusIcon = (question: RoundQuestionPageData) => {
     if (!isGraded) {
       return <Circle className="h-4 w-4 text-gray-400" />;
     }
-    
-    if (!question.isSolved) {
+
+    if (question.isCorrect === null) {
       return <Circle className="h-4 w-4 text-gray-400" />;
     }
-    
-    return question.isCorrect ? 
-      <CheckCircle className="h-4 w-4 text-green-500" /> : 
-      <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center">
-        <span className="text-white text-xs font-bold">×</span>
-      </div>;
+
+    return question.isCorrect ?
+        <CheckCircle className="h-4 w-4 text-green-500" /> :
+        <div className="h-4 w-4 rounded-full bg-red-500 flex items-center justify-center">
+          <span className="text-white text-xs font-bold">×</span>
+        </div>;
   };
 
   const handleAnswerSelect = (questionNumber: number, answer: number) => {
@@ -203,13 +137,15 @@ export default function RoundQuestionsPage() {
     }));
   };
 
-  const getOptionStyle = (question: Question, optionIndex: number) => {
+  const getOptionStyle = (question: RoundQuestionPageData, optionIndex: number) => {
     if (!isGraded) return '';
-    
+
+    const questionNum = getQuestionNumber(question.questionNumber);
+
     if (optionIndex === question.correctAnswer) {
       return 'bg-green-50 border-green-200';
     }
-    if (userAnswers[question.number] === optionIndex && optionIndex !== question.correctAnswer) {
+    if (userAnswers[questionNum] === optionIndex && optionIndex !== question.correctAnswer) {
       return 'bg-red-50 border-red-200';
     }
     return '';
@@ -364,123 +300,125 @@ export default function RoundQuestionsPage() {
 
       {/* 문제 목록 */}
       <div className="space-y-6">
-        {roundQuestions.map((question) => (
+        {roundQuestions.map((question) => {
           const questionNum = getQuestionNumber(question.questionNumber);
-            <Card
-                key={question.id}
-                className={`shadow-md hover:shadow-lg transition-shadow py-2 ${
-                    selectedQuestion === questionNum ? 'ring-2 ring-primary' : ''
-                }`}
-            >
-            <CardContent className="p-6 pb-4">
-              {/* 문제 헤더 */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  {getStatusIcon(question)}
-                  <div className="flex items-center justify-between space-x-2">
+
+          return (
+              <Card
+                  key={question.id}
+                  className={`shadow-md hover:shadow-lg transition-shadow py-2 ${
+                      selectedQuestion === questionNum ? 'ring-2 ring-primary' : ''
+                  }`}
+              >
+                <CardContent className="p-6 pb-4">
+                  {/* 문제 헤더 */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(question)}
+                      <div className="flex items-center justify-between space-x-2">
                     <span className="text-md font-medium text-gray-500">
-                      {question.number}번
+                      {questionNum}번
                     </span>
-                    {isGraded && (
-                        <Badge className={`${
-                            !question.isSolved
-                                ? "bg-black text-white"
-                                : question.isCorrect
-                                    ? "text-green-500"
-                                    : "text-rose-400"
-                        } text-xs`}>
-                          {!question.isSolved ? '미풀이' : question.isCorrect ? '정답' : '오답'}
-                        </Badge>
-                    )}
-                  </div>
-                </div>
-                {/* 북마크 버튼 */}
-                <button
-                    onClick={() => handleBookmark(question.questionNumber)}
-                    className="ml-2 rounded-full hover:bg-yellow-100 transition-colors"
-                    aria-label="북마크"
-                >
-                  {isBookmarked(question.id) ? (
-                      <BookmarkFilled className="h-5 w-5 text-yellow-400 fill-yellow-400"/>
-                  ) : (
-                      <Bookmark className="h-5 w-5 text-zinc-300"/>
-                  )}
-                </button>
-              </div>
-
-              {/* 문제 제목 */}
-              <p className="text-sm text-foreground mb-6 mx-0.5">
-                {question.title}
-              </p>
-
-              {/* 객관식 보기 */}
-              <div className="mb-4">
-                <RadioGroup
-                    value={userAnswers[question.number]?.toString() || ''}
-                    onValueChange={(value: string) => handleAnswerSelect(question.number, parseInt(value))}
-                    disabled={isGraded}
-                >
-                  {question.options.map((option, index) => (
-                      <div
-                          key={index}
-                          className={`flex items-center space-x-2 p-3 border rounded-lg mb-2 ${getOptionStyle(question, index)}`}
-                      >
-                        <RadioGroupItem value={index.toString()} id={`${question.id}-${index}`}/>
-                        <Label htmlFor={`${question.id}-${index}`} className="text-sm cursor-pointer">
-                          {option}
-                        </Label>
-                      </div>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* 카테고리 및 정답보기 버튼 */}
-              <div className="flex items-center justify-between">
-                <Badge className="text-xs bg-zinc-200 text-zinc-800">
-                  {question.category}
-                </Badge>
-
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleAnswer(question.number)}
-                    className="text-blue-600 hover:text-blue-700 bg-white"
-                >
-                  {showAnswers[question.number] ? (
-                      <>
-                        <X className="h-3 w-3 mr-1"/>
-                        닫기
-                      </>
-                  ) : (
-                      <>
-                        <Eye className="h-3 w-3 mr-1"/>
-                        정답보기
-                      </>
-                  )}
-                </Button>
-              </div>
-
-              {/* 정답 및 해설 */}
-              {showAnswers[question.number] && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="mb-3">
-                      <h4 className="text-sm font-semibold text-blue-800 mb-2">정답</h4>
-                      <div className="text-sm text-blue-900 font-semibold">
-                        {['①', '②', '③', '④', '⑤'][question.correctAnswer]}
+                        {isGraded && (
+                            <Badge className={`${
+                                question.isCorrect === null
+                                    ? "bg-black text-white"
+                                    : question.isCorrect
+                                        ? "text-green-500"
+                                        : "text-rose-400"
+                            } text-xs`}>
+                              {!question.isCorrect ? '미풀이' : question.isCorrect ? '정답' : '오답'}
+                            </Badge>
+                        )}
                       </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-blue-800 mb-2">해설</h4>
-                      <p className="text-sm text-blue-900 leading-relaxed">
-                        {roundQuestions.find(rq => rq.id === question.id)?.explanation ||
-                         `${year}년 ${round}회차 ${question.number}번 문제의 해설입니다.`}
-                      </p>
-                    </div>
+                    {/* 북마크 버튼 */}
+                    <button
+                        onClick={() => handleBookmark(question)}
+                        className="ml-2 rounded-full hover:bg-yellow-100 transition-colors"
+                        aria-label="북마크"
+                    >
+                      {question.isBookmarked ? (
+                          <BookmarkFilled className="h-5 w-5 text-yellow-400 fill-yellow-400"/>
+                      ) : (
+                          <Bookmark className="h-5 w-5 text-zinc-300"/>
+                      )}
+                    </button>
                   </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+
+                  {/* 문제 제목 */}
+                  <p className="text-sm text-foreground mb-6 mx-0.5">
+                    {question.questionText}
+                  </p>
+
+                  {/* 객관식 보기 */}
+                  <div className="mb-4">
+                    <RadioGroup
+                        value={userAnswers[questionNum]?.toString() || ''}
+                        onValueChange={(value: string) => handleAnswerSelect(questionNum, parseInt(value))}
+                        disabled={isGraded}
+                    >
+                      {question.formattedOptions.map((option, index) => (
+                          <div
+                              key={index}
+                              className={`flex items-center space-x-2 p-3 border rounded-lg mb-2 ${getOptionStyle(question, index + 1)}`}
+                          >
+                            <RadioGroupItem value={(index + 1).toString()} id={`${question.id}-${index}`}/>
+                            <Label htmlFor={`${question.id}-${index}`} className="text-sm cursor-pointer">
+                              {option}
+                            </Label>
+                          </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  {/* 카테고리 및 정답보기 버튼 */}
+                  <div className="flex items-center justify-between">
+                    <Badge className="text-xs bg-zinc-200 text-zinc-800">
+                      {question.subject}
+                    </Badge>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAnswer(questionNum)}
+                        className="text-blue-600 hover:text-blue-700 bg-white"
+                    >
+                      {showAnswers[questionNum] ? (
+                          <>
+                            <X className="h-3 w-3 mr-1"/>
+                            닫기
+                          </>
+                      ): (
+                          <>
+                            <Eye className="h-3 w-3 mr-1"/>
+                            정답보기
+                          </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* 정답 및 해설 */}
+                  {showAnswers[questionNum] && (
+                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="mb-3">
+                          <h4 className="text-sm font-semibold text-blue-800 mb-2">정답</h4>
+                          <div className="text-sm text-blue-900 font-semibold">
+                            {['①', '②', '③', '④', '⑤'][question.correctAnswer - 1]}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-blue-800 mb-2">해설</h4>
+                          <p className="text-sm text-blue-900 leading-relaxed">
+                            {question.explanation || `${year}년 ${round}회차 ${questionNum}번 문제의 해설입니다.`}
+                          </p>
+                        </div>
+                      </div>
+                  )}
+                </CardContent>
+              </Card>
+          );
+        })}
       </div>
 
       {/* 채점하기 영역 */}
@@ -490,18 +428,8 @@ export default function RoundQuestionsPage() {
           {isGraded ? (
               <Button
                   variant="outline"
-                  size={"sm"}
-                  onClick={() => {
-                    setUserAnswers({});
-                    setIsGraded(false);
-                    setShowAnswers({});
-                    setQuestions(prev => prev.map(question => ({
-                      ...question,
-                      isSolved: false,
-                      isCorrect: undefined,
-                      userAnswer: undefined
-                    })));
-                  }}
+                  size="sm"
+                  onClick={handleRetry}
                   className="bg-zinc-600 text-sm font-medium text-white hover:bg-primary/90"
               >
                 <RotateCcw className="h-4 w-4 mr-2"/>
@@ -509,7 +437,7 @@ export default function RoundQuestionsPage() {
               </Button>
           ) : (
               <Button
-                  size={"sm"}
+                  size="sm"
                   className="bg-primary text-sm font-medium text-green-400 hover:bg-primary/90 disabled:bg-zinc-600 disabled:text-white"
                   onClick={handleGrade}
                   disabled={isGraded || Object.keys(userAnswers).length === 0}
@@ -522,7 +450,7 @@ export default function RoundQuestionsPage() {
         <CardContent className="pt-0">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="bg-zinc-100 rounded-lg p-3">
-              <div className="text-lg font-bold text-primary">{questions.length}</div>
+              <div className="text-lg font-bold text-primary">{roundQuestions.length}</div>
               <div className="text-xs text-muted-foreground">총 문제</div>
             </div>
             <div className="bg-green-50 rounded-lg p-3">
@@ -540,177 +468,4 @@ export default function RoundQuestionsPage() {
       </Card>
     </div>
   );
-}
-////
-{/* 문제 목록 */}
-<div className="space-y-6">
-  {roundQuestions.map((question) => {
-    const questionNum = getQuestionNumber(question.questionNumber);
-
-    return (
-        <Card
-            key={question.id}
-            className={`shadow-md hover:shadow-lg transition-shadow py-2 ${
-                selectedQuestion === questionNum ? 'ring-2 ring-primary' : ''
-            }`}
-        >
-          <CardContent className="p-6 pb-4">
-            {/* 문제 헤더 */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                {getStatusIcon(question)}
-                <div className="flex items-center justify-between space-x-2">
-                      <span className="text-md font-medium text-gray-500">
-                        {questionNum}번
-                      </span>
-                  {isGraded && (
-                      <Badge className={`${
-                          question.isCorrect === null
-                              ? "bg-black text-white"
-                              : question.isCorrect
-                                  ? "text-green-500"
-                                  : "text-rose-400"
-                      } text-xs`}>
-                        {question.isCorrect === null ? '미풀이' : question.isCorrect ? '정답' : '오답'}
-                      </Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* 북마크 버튼 */}
-              <button
-                  onClick={() => handleBookmark(question)}
-                  className="ml-2 rounded-full hover:bg-yellow-100 transition-colors"
-                  aria-label="북마크"
-              >
-                {question.isBookmarked ? (
-                    <BookmarkFilled className="h-5 w-5 text-yellow-400 fill-yellow-400"/>
-                ) : (
-                    <Bookmark className="h-5 w-5 text-zinc-300"/>
-                )}
-              </button>
-            </div>
-
-            {/* 문제 제목 */}
-            <p className="text-sm text-foreground mb-6 mx-0.5">
-              {question.questionText}
-            </p>
-
-            {/* 객관식 보기 */}
-            <div className="mb-4">
-              <RadioGroup
-                  value={userAnswers[questionNum]?.toString() || ''}
-                  onValueChange={(value: string) => handleAnswerSelect(questionNum, parseInt(value))}
-                  disabled={isGraded}
-              >
-                {question.formattedOptions.map((option, index) => (
-                    <div
-                        key={index}
-                        className={`flex items-center space-x-2 p-3 border rounded-lg mb-2 ${getOptionStyle(question, index + 1)}`}
-                    >
-                      <RadioGroupItem value={(index + 1).toString()} id={`${question.id}-${index}`}/>
-                      <Label htmlFor={`${question.id}-${index}`} className="text-sm cursor-pointer">
-                        {option}
-                      </Label>
-                    </div>
-                ))}
-              </RadioGroup>
-            </div>
-
-            {/* 카테고리 및 정답보기 버튼 */}
-            <div className="flex items-center justify-between">
-              <Badge className="text-xs bg-zinc-200 text-zinc-800">
-                {question.subject}
-              </Badge>
-
-              <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggleAnswer(questionNum)}
-                  className="text-blue-600 hover:text-blue-700 bg-white"
-              >
-                {showAnswers[questionNum] ? (
-                    <>
-                      <X className="h-3 w-3 mr-1"/>
-                      닫기
-                    </>
-                ) : (
-                    <>
-                      <Eye className="h-3 w-3 mr-1"/>
-                      정답보기
-                    </>
-                )}
-              </Button>
-            </div>
-
-            {/* 정답 및 해설 */}
-            {showAnswers[questionNum] && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="mb-3">
-                    <h4 className="text-sm font-semibold text-blue-800 mb-2">정답</h4>
-                    <div className="text-sm text-blue-900 font-semibold">
-                      {['①', '②', '③', '④', '⑤'][question.correctAnswer - 1]}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-blue-800 mb-2">해설</h4>
-                    <p className="text-sm text-blue-900 leading-relaxed">
-                      {question.explanation || `${year}년 ${round}회차 ${questionNum}번 문제의 해설입니다.`}
-                    </p>
-                  </div>
-                </div>
-            )}
-          </CardContent>
-        </Card>
-    );
-  })}
-</div>
-
-{/* 채점하기 영역 */}
-<Card className="mt-6 shadow-lg">
-  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-    <CardTitle className="text-lg font-semibold">문제 현황</CardTitle>
-    {isGraded ? (
-        <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRetry}
-            className="bg-zinc-600 text-sm font-medium text-white hover:bg-primary/90"
-        >
-          <RotateCcw className="h-4 w-4 mr-2"/>
-          전체 다시 풀기
-        </Button>
-    ) : (
-        <Button
-            size="sm"
-            className="bg-primary text-sm font-medium text-green-400 hover:bg-primary/90 disabled:bg-zinc-600 disabled:text-white"
-            onClick={handleGrade}
-            disabled={isGraded || Object.keys(userAnswers).length === 0}
-        >
-          <CheckCircle className="h-4 w-4 mr-2"/>
-          채점하기
-        </Button>
-    )}
-  </CardHeader>
-  <CardContent className="pt-0">
-    <div className="grid grid-cols-3 gap-4 text-center">
-      <div className="bg-zinc-100 rounded-lg p-3">
-        <div className="text-lg font-bold text-primary">{roundQuestions.length}</div>
-        <div className="text-xs text-muted-foreground">총 문제</div>
-      </div>
-      <div className="bg-green-50 rounded-lg p-3">
-        <div className="text-lg font-bold text-green-600">{correctAnswers.length}</div>
-        <div className="text-xs text-muted-foreground">정답</div>
-      </div>
-      <div className="bg-orange-50 rounded-lg p-3">
-        <div className="text-lg font-bold text-orange-600">
-          {solvedQuestions.length > 0 ? Math.round(accuracy) : 0}%
-        </div>
-        <div className="text-xs text-muted-foreground">정답률</div>
-      </div>
-    </div>
-  </CardContent>
-</Card>
-</div>
-);
 }
